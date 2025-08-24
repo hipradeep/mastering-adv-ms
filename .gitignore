@@ -1,0 +1,12 @@
+/.idea/
+
+
+### Microservice Modules Targets ###
+gateway-service/target/
+eureka-server/target/
+config-server/target/
+auth-service/target/
+user-service/target/
+order-service/target/
+inventory-service/target/
+notification-service/target/

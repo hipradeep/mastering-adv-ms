@@ -1,0 +1,13 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: user-service
+
+
+logging:
+  level:
+    org.springframework.boot.env: DEBUG    # Shows config loading
+    org.springframework.core.env: DEBUG    # Shows property resolution
+    com.hipradeep: TRACE                   # Your package for custom logging
