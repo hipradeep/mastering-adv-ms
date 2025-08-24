@@ -47,7 +47,22 @@
 	<!-- Java version -->
 	<properties>
 		<java.version>21</java.version>
+		<spring-boot.version>3.5.3</spring-boot.version>
+		<spring-cloud.version>2025.0.0</spring-cloud.version>
 	</properties>
+
+	<!-- Spring Cloud Dependencies Management -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<!-- Dependencies -->
 	<dependencies>
@@ -65,11 +80,16 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Eureka Server (to register all services in service registry) -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+		</dependency>
+
 		<!-- Lombok (for reducing boilerplate code) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -82,6 +102,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

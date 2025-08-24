@@ -10,3 +10,4 @@ user-service/target/
 order-service/target/
 inventory-service/target/
 notification-service/target/
+/logs/

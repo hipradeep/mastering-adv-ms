@@ -1,5 +1,7 @@
 package com.hipradeep.userservice;
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -10,6 +12,9 @@ import java.util.Map;
 
 @Component
 public class YamlValidator implements ApplicationRunner {
+
+    @Value("${custom.message}")
+    private  String message;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -28,5 +33,9 @@ public class YamlValidator implements ApplicationRunner {
         } catch (Exception e) {
             System.out.println("YAML syntax error: " + e.getMessage());
         }
+    }
+
+    public void print() {
+        System.out.println("Message from Config Server: " + message);
     }
 }

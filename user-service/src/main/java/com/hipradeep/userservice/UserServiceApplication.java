@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class UserServiceApplication {
@@ -46,10 +47,17 @@ public class UserServiceApplication {
 
 	public static void main(String[] args) {
 		//SpringApplication.run(UserServiceApplication.class, args);
-		SpringApplication application = new SpringApplication(UserServiceApplication.class);
+		//SpringApplication application = new SpringApplication(UserServiceApplication.class);
 		//application.setWebEnvironment(false);
-		application.setBannerMode(Banner.Mode.OFF);
-		application.run(args);
+		//application.setBannerMode(Banner.Mode.OFF);
+		//application.run(args);
+
+		ConfigurableApplicationContext context = SpringApplication.run(UserServiceApplication.class, args);
+		String msg = context.getEnvironment().getProperty("custom.message");
+		System.out.println("Message from Config Server: " + msg);
+
+		context.getBean(YamlValidator.class).print();
+
 	}
 
 }

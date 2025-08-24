@@ -1,0 +1,31 @@
+# Common settings for ALL microservices
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8771/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: false
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}:${server.port}
+
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    org.springframework.web: INFO
+    org.hibernate: ERROR
+    com.hipradeep: DEBUG
+
+# Custom common properties
+app:
+  version: 1.0.0
+  support-email: support@hipradeep.com
+  max-file-size: 10MB
+  timeout: 30s
+
+
+custom:
+  message: "Hello from Config Server"
