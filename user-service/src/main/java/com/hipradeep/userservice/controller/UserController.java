@@ -1,8 +1,7 @@
 package com.hipradeep.userservice.controller;
 
-
-import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.util.JsonUtils;
+import com.hipradeep.common.dto.ApiResponse;
+import com.hipradeep.common.util.JsonUtils;
 import com.hipradeep.userservice.dto.UserResponse;
 import org.springframework.web.bind.annotation.*;
 

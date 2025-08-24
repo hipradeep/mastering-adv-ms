@@ -1,5 +1,6 @@
 package com.hipradeep.userservice.dto;
 
+import com.hipradeep.common.dto.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

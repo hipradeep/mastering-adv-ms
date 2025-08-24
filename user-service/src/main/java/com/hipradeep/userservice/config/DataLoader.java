@@ -1,7 +1,7 @@
 package com.hipradeep.userservice.config;
 
+import com.hipradeep.common.util.JsonUtils;
 import com.hipradeep.userservice.dto.UserResponse;
-import com.hipradeep.userservice.util.JsonUtils;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 

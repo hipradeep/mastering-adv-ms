@@ -1,87 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- Parent Spring Boot version -->
+	<!-- Parent is your ROOT POM, not Spring Boot directly -->
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.3</version>
-		<relativePath/>
+		<groupId>com.hipradeep</groupId>
+		<artifactId>mastring-adv-ms</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 
-	<!-- Project coordinates -->
-	<groupId>com.hipradeep</groupId>
+	<!-- Project coordinates - only artifactId needed, rest inherited -->
 	<artifactId>gateway-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>gateway-service</name>
-	<description>Api Gateway for MAMS</description>
-	<url>https://github.com/hipradeep/mastring-adv-ms</url>
-
-	<!-- Metadata -->
-	<licenses>
-		<license>
-			<name>Apache License 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
-		</license>
-	</licenses>
-
-	<developers>
-		<developer>
-			<id>hipradeep</id>
-			<name>Pradeep Maurya</name>
-			<email>pradeepmaurya.cse@gmail.com</email>
-		</developer>
-	</developers>
-
-	<scm>
-		<connection>scm:git:git://github.com/hipradeep/mastring-adv-ms.git</connection>
-		<developerConnection>scm:git:ssh://github.com:hipradeep/mastring-adv-ms.git</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/hipradeep/mastring-adv-ms</url>
-	</scm>
-
-	<!-- Java version -->
-	<properties>
-		<java.version>21</java.version>
-	</properties>
+	<description>API Gateways Service for MAMS</description>
 
 	<!-- Dependencies -->
 	<dependencies>
+		<!-- Common Library -->
+		<dependency>
+			<groupId>com.hipradeep</groupId>
+			<artifactId>common-lib</artifactId>
+		</dependency>
 
-		<!-- Core Spring Web (needed only if fallback endpoints or filters use REST controllers) -->
+		<!-- Core Spring Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- Spring Boot Starter for Testing: includes JUnit, Mockito, and Spring Test utilities -->
+		<!-- Spring Boot Starter for Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Lombok (for reducing boilerplate code) -->
+		<!-- Lombok Dependency -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 
-	<!-- Build plugins -->
+	<!-- Build plugins - most inherited from parent -->
 	<build>
 		<plugins>
 			<!-- Spring Boot plugin for packaging as executable JAR -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<!-- Configuration inherited from parent's pluginManagement -->
 			</plugin>
 		</plugins>
 	</build>

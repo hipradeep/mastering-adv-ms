@@ -1,7 +1,7 @@
 package com.hipradeep.userservice.exception;
 
-import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.exception.BusinessException;
+import com.hipradeep.common.dto.ApiResponse;
+import com.hipradeep.common.exception.BusinessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
