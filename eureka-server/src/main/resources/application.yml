@@ -1,5 +1,5 @@
 server:
-  port: 8771
+  port: 8761
 
 spring:
   application:
@@ -23,3 +23,4 @@ eureka:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
     enable-self-preservation: false  # Useful for development, disable in production
+                                    #In development, you can turn it off if you want instant removal of disconnected instances.
