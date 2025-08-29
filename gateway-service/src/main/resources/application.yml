@@ -7,6 +7,21 @@ spring:
   config:
     import: "optional:configserver:http://localhost:8888/"
 
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true         # Enable route generation via serviceId
+          lower-case-service-id: true
+      routes:
+        - id: user-service
+          uri: lb://user-service   # lb:// = load balanced via Eureka
+          predicates:
+            - Path=/api/users/**        # Route requests starting with /user
+          filters:
+          #- StripPrefix=1        # Remove /api before forwarding
+          #- StripPrefix=2        # Remove /api/users before forwarding
+
 
 logging:
   level:

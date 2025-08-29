@@ -67,10 +67,22 @@
 	<!-- Dependencies -->
 	<dependencies>
 
-		<!-- Core Spring Web (needed only if fallback endpoints or filters use REST controllers) -->
+		<!-- Core Spring Web: Only needed if fallback endpoints or filters use traditional REST controllers.
+             We do NOT require spring-boot-starter-web, as Spring Cloud Gateway runs on reactive WebFlux. -->
+		<!--
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        -->
+
+
+		<!-- Spring Cloud Gateway Starter: Provides a reactive API gateway built on Spring WebFlux
+             (included automatically) and runs on Netty. Supports non-blocking routing, filters,
+             service discovery, and client-side load balancing for cloud-native microservices -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-gateway</artifactId>
 		</dependency>
 
 		<!-- Spring Boot Starter for Testing: includes JUnit, Mockito, and Spring Test utilities -->

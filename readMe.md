@@ -16,10 +16,8 @@ A monorepo containing multiple independent Spring Boot microservices demonstrati
 ---
 ## Branch & Feature Addition Guidelines
 
-**Branch Name**: `feature/eureka-setup`
-- Implementation **Service Registration using Eureka**.
-- Implementation **Spring Cloud Config Server**.
-- Register all clients with centralized configuration using **Config Server**
+**Branch Name**: `feature/gateway`
+- Implementation **Configure Spring Cloud Gateway**.
 
 ---
 # Build && Run 
