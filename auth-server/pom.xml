@@ -92,6 +92,36 @@
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
+        <!-- Spring Security: Provides authentication and authorization capabilities -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- JWT Dependencies: For JWT token handling in security filters -->
+        <!-- JJWT API: Interfaces and classes for JWT creation and verification -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+
+        <!-- JJWT Implementation: Runtime implementation of JWT functionality -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JJWT Jackson: JSON processor for Jackson-based JWT serialization/deserialization -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Lombok (for reducing boilerplate code) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
