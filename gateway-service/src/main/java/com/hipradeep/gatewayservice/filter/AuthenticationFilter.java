@@ -13,6 +13,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import java.util.List;
 
 @Component
 @RefreshScope
@@ -57,11 +58,23 @@ public class AuthenticationFilter implements GatewayFilter {
             return exchange.getResponse().setComplete();
         }
 
+        List<String> roles = jwtUtil.getRoles(token);
+        log.warn("Access Roles: {}", roles);
+
+        // Restrict /api/users/wallets/** to ADMIN
+        String path = exchange.getRequest().getURI().getPath();
+        if (path.startsWith("/api/users/wallets") && !roles.contains("ADMIN")) {
+            log.warn("Invalid Access, Wallets are only for ADMIN: {}", request.getURI().getPath());
+            exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+            return exchange.getResponse().setComplete();
+        }
+
         // Extract username from token and add it to headers for downstream services
         String username = jwtUtil.getUsername(token);
         if (username != null) {
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header("X-Username", username)
+                    .header("X-Roles", String.join(",", roles))
                     .build();
 
             exchange = exchange.mutate().request(mutatedRequest).build();

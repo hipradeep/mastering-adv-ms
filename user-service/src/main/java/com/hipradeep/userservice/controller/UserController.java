@@ -4,6 +4,8 @@ package com.hipradeep.userservice.controller;
 import com.hipradeep.userservice.dto.ApiResponse;
 import com.hipradeep.userservice.util.JsonUtils;
 import com.hipradeep.userservice.dto.UserResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,5 +61,13 @@ public class UserController {
         System.out.println("Parsed User: " + parsedUser.getUsername());
 
         return json;
+    }
+
+    @GetMapping("/wallets")
+    public ResponseEntity<String> getAdminData(@RequestHeader("X-Roles") String rolesHeader) {
+        if (!rolesHeader.contains("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return ResponseEntity.ok("Secret ADMIN data for uwallets");
     }
 }
