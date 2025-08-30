@@ -1,8 +1,10 @@
 package com.hipradeep.gatewayservice.filter;
 
+import com.hipradeep.gatewayservice.config.RouterValidator;
 import com.hipradeep.gatewayservice.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,9 @@ import reactor.core.publisher.Mono;
 //@Order(Ordered.HIGHEST_PRECEDENCE)
 public class JwtFilter implements WebFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
+
+    @Autowired
+    private RouterValidator routerValidator;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -32,6 +37,11 @@ public class JwtFilter implements WebFilter {
             log.info("Skipped JWT Validation: {}", exchange.getRequest().getMethod());
             return chain.filter(exchange);
         }
+    //OR
+//        if (!routerValidator.isSecured.test(exchange.getRequest())) {
+//            log.info("Skipped JWT Validation: {}", exchange.getRequest().getMethod());
+//            return chain.filter(exchange);
+//        }
 
         // Continue with JWT validation...
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
