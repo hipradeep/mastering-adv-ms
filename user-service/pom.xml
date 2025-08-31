@@ -110,6 +110,22 @@
 			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
 
+		<!-- Spring Security: Provides authentication and authorization capabilities -->
+		<!-- Used ONLY for downstream service authorization (method-level security @PreAuthorize) -->
+		<!-- Gateway handles JWT validation - downstream services trust gateway headers -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- Spring AOP: Enables aspect-oriented programming -->
+		<!-- Required for @PreAuthorize, @PostAuthorize method-level security annotations -->
+		<!-- Allows method interception for security checks and custom aspects -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
 		<!-- Lombok (for reducing boilerplate code) -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>

@@ -20,86 +20,100 @@ A monorepo containing multiple independent Spring Boot microservices demonstrati
 - Implementation **Configure Spring Cloud Gateway**.
 
 ---
-# Build && Run 
-## clean, compile, install and test
-### auth-server
-```bash
-cd auth-server && mvn clean install && mvn spring-boot:run
-```
+# Spring Security Microservices Architecture
 
-### config-server
-```bash
-cd config-server && mvn clean install && mvn spring-boot:run
-```
+## 🏗️ Architecture Overview
+Two-tier security system with API Gateway handling authentication and downstream services handling authorization.
 
-### eureka-server
-```bash
-cd eureka-server && mvn clean install && mvn spring-boot:run
+## 📁 Project Structure
 ```
+gateway-service/
+├── config/
+│       ├── SecurityConfig.java
+└── filter/
+        ├── JwtReactiveAuthenticationManager.java
 
-### gateway-service
-```bash
-cd gateway-service && mvn clean install && mvn spring-boot:run
+user-service/
+├── config/
+│       └── DownstreamSecurityConfig.java
+└── filter/
+        └── GatewayHeaderAuthFilter.java
 ```
+## 🔐 Gateway Service Responsibilities
 
-### inventory-service
-```bash
-cd inventory-service && mvn clean install && mvn spring-boot:run
-```
+### Configuration
+- **SecurityConfig.java** - Main security configuration with JWT setup
 
-### notification-service
-```bash
-cd notification-service && mvn clean install && mvn spring-boot:run
-```
+### Core Components
+- **JwtReactiveAuthenticationManager** - Validates JWT tokens, 
 
-### order-service
-```bash
-cd order-service && mvn clean install && mvn spring-boot:run
-```
+### Key Features
+- JWT token validation
+- Role extraction from tokens
+- Request routing with security headers
+- Open endpoints configuration
 
-### user-service
-```bash
-cd user-seribice && mvn clean install && mvn spring-boot:run
-```
+## 🔒 Downstream Service Responsibilities
 
-# Build && Run
-## clean, compile, install and without test
-### config-server
-```bash
-cd config-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Configuration
+- **DownstreamSecurityConfig** - Security setup for downstream services
 
-### eureka-server
-```bash
-cd eureka-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Core Components
+- **GatewayHeaderAuthFilter** - Validates gateway headers and sets security context
 
-### gateway-service
-```bash
-cd gateway-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Key Features
+- Header-based authentication trust
+- Method-level security with `@PreAuthorize`
+- Business logic authorization
 
-### auth-server
-```bash
-cd auth-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+## 🛡️ Security Flow
 
-### inventory-service
-```bash
-cd inventory-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Authentication Flow
+1. Client → Gateway with JWT
+2. Gateway validates JWT → extracts roles
+3. Gateway forwards request with headers:
+    - `X-Username`: Authenticated username
+    - `X-Roles`: Comma-separated roles
+    - `X-Source`: "gateway" identifier
 
-### notification-service
-```bash
-cd notification-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Authorization Flow
+1. Downstream service receives request with headers
+2. Validates `X-Source` header
+3. Sets Spring Security context from headers
+4. Applies method-level security rules
 
-### order-service
-```bash
-cd order-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+## ⚙️ Configuration Highlights
 
-### user-service
-```bash
-cd user-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Gateway Security
+- Stateless JWT authentication
+- Role-based route protection
+- Header propagation to downstream services
+- Open endpoints configuration
+
+### Downstream Security
+- Header trust model
+- Method-level access control
+- Flexible authorization rules
+- Defense in depth architecture
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Java 17+
+- Spring Boot 3.+
+- Spring Cloud Gateway
+- JWT tokens
+
+### Dependencies
+```xml
+<!-- Gateway -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+<!-- Downstream -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>

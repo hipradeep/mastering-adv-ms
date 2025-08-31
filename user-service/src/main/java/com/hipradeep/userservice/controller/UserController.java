@@ -6,6 +6,7 @@ import com.hipradeep.userservice.util.JsonUtils;
 import com.hipradeep.userservice.dto.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
+
         // Simulate getting user from database
         UserResponse user = new UserResponse(id, "johndoe", "john@example.com", "John", "Doe");
 
@@ -23,15 +25,39 @@ public class UserController {
         return ApiResponse.success(user);
     }
 
+//    @GetMapping
+//    public ResponseEntity<?> getAllUsers(@RequestHeader(value = "X-Roles", required = false) String rolesHeader) {
+//        // Check if rolesHeader is null or empty
+//        if (rolesHeader == null || rolesHeader.trim().isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: No roles provided");
+//        }
+//
+//        // Check if user has either USER OR ADMIN role (not AND)
+//        if (!rolesHeader.contains("USER") && !rolesHeader.contains("ADMIN")) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Insufficient privileges");
+//        }
+//
+//        // Simulate getting all users
+//        List<UserResponse> users = List.of(
+//                new UserResponse(1L, "johndoe", "john@example.com", "John", "Doe"),
+//                new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe")
+//        );
+//
+//        // Return OK status instead of FORBIDDEN for successful access
+//        return ResponseEntity.ok(users);
+//    }
     @GetMapping
-    public ApiResponse<List<UserResponse>> getAllUsers() {
+   // @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> getAllUsers() {
+
         // Simulate getting all users
         List<UserResponse> users = List.of(
                 new UserResponse(1L, "johndoe", "john@example.com", "John", "Doe"),
                 new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe")
         );
 
-        return ApiResponse.success(users);
+        // Return OK status instead of FORBIDDEN for successful access
+        return ResponseEntity.ok(users);
     }
 
     @PostMapping
@@ -63,11 +89,20 @@ public class UserController {
         return json;
     }
 
+//    @GetMapping("/wallets")
+//    public ResponseEntity<String> getAdminData(@RequestHeader("X-Roles") String rolesHeader) {
+//        if (!rolesHeader.contains("ADMIN")) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+//        }
+//        return ResponseEntity.ok("Secret ADMIN data for uwallets");
+//    }
+
     @GetMapping("/wallets")
-    public ResponseEntity<String> getAdminData(@RequestHeader("X-Roles") String rolesHeader) {
-        if (!rolesHeader.contains("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> getAdminData() {
+        //if (!rolesHeader.contains("ADMIN")) {
+        //    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        //}
         return ResponseEntity.ok("Secret ADMIN data for uwallets");
     }
 }
