@@ -15,10 +15,19 @@ spring:
           lower-case-service-id: true
       routes:
         - id: user-service
+          #uri: http://localhost:8082   # lb:// = load balanced via Eureka
           uri: lb://user-service   # lb:// = load balanced via Eureka
           predicates:
             - Path=/api/users/**        # Route requests starting with /user
-          filters:
+          #filters:
+          #- StripPrefix=1        # Remove /api before forwarding
+          #- StripPrefix=2        # Remove /api/users before forwarding
+        - id: order-service
+          #uri: http://localhost:8083   # lb:// = load balanced via Eureka
+          uri: lb://order-service   # lb:// = load balanced via Eureka
+          predicates:
+            - Path=/api/orders/**        # Route requests starting with /user
+          #filters:
           #- StripPrefix=1        # Remove /api before forwarding
           #- StripPrefix=2        # Remove /api/users before forwarding
 

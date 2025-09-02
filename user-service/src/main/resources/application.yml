@@ -6,6 +6,15 @@ spring:
     name: user-service
   config:
     import: optional:configserver:http://localhost:8888
+  rest:
+    connection-timeout: 5000
+    read-timeout: 10000
+
+order:
+  service:
+    #base-url: http://localhost:8083
+    base-url: http://order-service
+
 
 
 logging:
@@ -13,6 +22,8 @@ logging:
     org.springframework.boot.env: DEBUG    # Shows config loading
     org.springframework.core.env: DEBUG    # Shows property resolution
     com.hipradeep: TRACE                   # Your package for custom logging
+    com.hipradeep.userservice.client: DEBUG
+    org.springframework.web.client: DEBUG
 
 
 
