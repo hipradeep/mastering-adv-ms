@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
+@EnableFeignClients(basePackages = "com.hipradeep.userservice.client")  // Scans for Feign clients
 public class UserServiceApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserServiceApplication.class);

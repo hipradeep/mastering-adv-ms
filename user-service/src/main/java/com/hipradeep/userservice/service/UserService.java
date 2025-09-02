@@ -1,6 +1,6 @@
 package com.hipradeep.userservice.service;
 
-import com.hipradeep.userservice.client.OrderServiceClient;
+import com.hipradeep.userservice.client.OrderServiceFeignClient;
 import com.hipradeep.userservice.dto.Address;
 import com.hipradeep.userservice.dto.Order;
 import com.hipradeep.userservice.dto.User;
@@ -15,9 +15,9 @@ public class UserService {
 
     private final Map<Long, User> users = new HashMap<>();
     private final AtomicLong idCounter = new AtomicLong(1);
-    private final OrderServiceClient orderServiceClient;
+    private final OrderServiceFeignClient orderServiceClient;
 
-    public UserService(OrderServiceClient orderServiceClient) {
+    public UserService(OrderServiceFeignClient orderServiceClient) {
         this.orderServiceClient = orderServiceClient;
         initializeDummyData();
     }

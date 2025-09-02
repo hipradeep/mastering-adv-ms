@@ -92,14 +92,14 @@
 			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
 
-		<!-- WebFlux: Reactive web framework for non-blocking, asynchronous programming
-			Includes WebClient - modern replacement for RestTemplate
-			Enables reactive programming with Mono/Flux streams
-			Coexists with traditional Spring MVC (RestTemplate)
-			Required for @LoadBalanced WebClient with service discovery -->
+		<!-- OpenFeign: Declarative REST client for microservices
+			Enables: @FeignClient interfaces for service-to-service calls
+			Features: Built-in load balancing, service discovery integration
+			Benefits: No manual REST template code, cleaner architecture
+			Works with: Eureka service discovery, circuit breakers -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 
 		<!-- Validation -->

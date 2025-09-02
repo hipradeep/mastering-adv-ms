@@ -10,12 +10,17 @@ spring:
     connection-timeout: 5000
     read-timeout: 10000
 
-order:
-  service:
-    #base-url: http://localhost:8083
-    base-url: http://order-service
-
-
+feign:
+  client:
+    config:
+      default:  # Applies to all Feign clients
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+        errorDecoder: feign.error.DefaultErrorDecoder
+      order-service:
+        connectTimeout: 3000
+        readTimeout: 8000
 
 logging:
   level:
