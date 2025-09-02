@@ -92,6 +92,16 @@
 			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
 
+		<!-- WebFlux: Reactive web framework for non-blocking, asynchronous programming
+			Includes WebClient - modern replacement for RestTemplate
+			Enables reactive programming with Mono/Flux streams
+			Coexists with traditional Spring MVC (RestTemplate)
+			Required for @LoadBalanced WebClient with service discovery -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
 		<!-- Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

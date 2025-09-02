@@ -1,16 +1,15 @@
 package com.hipradeep.userservice.client;
 
-
 import com.hipradeep.userservice.dto.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,29 +19,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderServiceClient {
 
-    private final RestTemplate restTemplate; // Injected LoadBalanced RestTemplate, to work with eureka
+    private final WebClient.Builder webClientBuilder;
 
-    //@Value("${order.service.base-url:http://localhost:8083}")
     @Value("${order.service.base-url:http://order-service}")
     private String orderServiceBaseUrl;
 
-    //private String orderServiceBaseUrl ="http://order-service";
-
     public List<Order> getOrdersByCustomerId(Long customerId) {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(orderServiceBaseUrl)
-                    .path("/api/orders/customer/{customerId}")
-                    .buildAndExpand(customerId)
-                    .toUriString();
-
-            ResponseEntity<List<Order>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Order>>() {}
-            );
-
-            return response.getBody();
+            return webClientBuilder.build()
+                    .get()
+                    .uri(orderServiceBaseUrl + "/api/orders/customer/{customerId}", customerId)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Order>>() {})
+                    .block();
+        } catch (WebClientResponseException.NotFound e) {
+            log.info("No orders found for customer ID: {}", customerId);
+            return Collections.emptyList();
         } catch (Exception e) {
             log.error("Error fetching orders for customer ID: {}", customerId, e);
             return Collections.emptyList();
@@ -51,12 +43,15 @@ public class OrderServiceClient {
 
     public Order getOrderById(Long orderId) {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(orderServiceBaseUrl)
-                    .path("/api/orders/{id}")
-                    .buildAndExpand(orderId)
-                    .toUriString();
-
-            return restTemplate.getForObject(url, Order.class);
+            return webClientBuilder.build()
+                    .get()
+                    .uri(orderServiceBaseUrl + "/api/orders/{id}", orderId)
+                    .retrieve()
+                    .bodyToMono(Order.class)
+                    .block();
+        } catch (WebClientResponseException.NotFound e) {
+            log.info("Order not found with ID: {}", orderId);
+            return null;
         } catch (Exception e) {
             log.error("Error fetching order by ID: {}", orderId, e);
             return null;
@@ -65,18 +60,12 @@ public class OrderServiceClient {
 
     public List<Order> getAllOrders() {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(orderServiceBaseUrl)
-                    .path("/api/orders")
-                    .toUriString();
-
-            ResponseEntity<List<Order>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Order>>() {}
-            );
-
-            return response.getBody();
+            return webClientBuilder.build()
+                    .get()
+                    .uri(orderServiceBaseUrl + "/api/orders")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Order>>() {})
+                    .block();
         } catch (Exception e) {
             log.error("Error fetching all orders", e);
             return Collections.emptyList();
@@ -85,11 +74,13 @@ public class OrderServiceClient {
 
     public Order createOrder(Order order) {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(orderServiceBaseUrl)
-                    .path("/api/orders")
-                    .toUriString();
-
-            return restTemplate.postForObject(url, order, Order.class);
+            return webClientBuilder.build()
+                    .post()
+                    .uri(orderServiceBaseUrl + "/api/orders")
+                    .bodyValue(order)
+                    .retrieve()
+                    .bodyToMono(Order.class)
+                    .block();
         } catch (Exception e) {
             log.error("Error creating order", e);
             return null;
@@ -98,16 +89,41 @@ public class OrderServiceClient {
 
     public boolean deleteOrder(Long orderId) {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(orderServiceBaseUrl)
-                    .path("/api/orders/{id}")
-                    .buildAndExpand(orderId)
-                    .toUriString();
-
-            restTemplate.delete(url);
+            webClientBuilder.build()
+                    .delete()
+                    .uri(orderServiceBaseUrl + "/api/orders/{id}", orderId)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
             return true;
+        } catch (WebClientResponseException.NotFound e) {
+            log.info("Order not found for deletion with ID: {}", orderId);
+            return false;
         } catch (Exception e) {
             log.error("Error deleting order ID: {}", orderId, e);
             return false;
         }
+    }
+
+    // Additional method with better error handling using onStatus
+    public List<Order> getOrdersByCustomerIdWithBetterErrorHandling(Long customerId) {
+        return webClientBuilder.build()
+                .get()
+                .uri(orderServiceBaseUrl + "/api/orders/customer/{customerId}", customerId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, response -> {
+                    log.warn("Client error when fetching orders for customer ID: {}", customerId);
+                    return Mono.error(new RuntimeException("Client error: " + response.statusCode()));
+                })
+                .onStatus(HttpStatusCode::is5xxServerError, response -> {
+                    log.error("Server error when fetching orders for customer ID: {}", customerId);
+                    return Mono.error(new RuntimeException("Server error: " + response.statusCode()));
+                })
+                .bodyToMono(new ParameterizedTypeReference<List<Order>>() {})
+                .onErrorResume(e -> {
+                    log.error("Error in WebClient call for customer ID: {}", customerId, e);
+                    return Mono.just(Collections.emptyList());
+                })
+                .block();
     }
 }
