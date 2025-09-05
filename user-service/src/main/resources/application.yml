@@ -9,18 +9,44 @@ spring:
   rest:
     connection-timeout: 5000
     read-timeout: 10000
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
 
 feign:
   client:
     config:
-      default:  # Applies to all Feign clients
+      default:     # applies to all feign clients
         connectTimeout: 5000
         readTimeout: 10000
         loggerLevel: basic
-        errorDecoder: feign.error.DefaultErrorDecoder
-      order-service:
+      order-service:   # applies only to order-service client
         connectTimeout: 3000
         readTimeout: 8000
+        loggerLevel: full
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default: # Base configuration
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+    instances:
+      order-service:       # Circuit breaker name
+        registerHealthIndicator: true
+        slidingWindowSize: 10      # Number of calls to measure
+        failureRateThreshold: 50   # % of failures to trip circuit
+        waitDurationInOpenState: 5s # How long to stay OPEN before retry
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
 
 logging:
   level:
@@ -29,6 +55,8 @@ logging:
     com.hipradeep: TRACE                   # Your package for custom logging
     com.hipradeep.userservice.client: DEBUG
     org.springframework.web.client: DEBUG
+    io.github.resilience4j.circuitbreaker: INFO
+    org.springframework.cloud.loadbalancer: WARN
 
 
 

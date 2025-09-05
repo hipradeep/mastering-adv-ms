@@ -9,7 +9,7 @@ import java.util.List;
 @FeignClient(
         name = "order-service",
         //url = "http://localhost:8083",  // Direct URL for testing
-        fallback = OrderServiceFallback.class
+        fallbackFactory  = OrderServiceFallbackFactory.class
 )  // Eureka service name
 public interface OrderServiceFeignClient {
 

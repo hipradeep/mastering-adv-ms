@@ -102,6 +102,14 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 
+		<!-- Enables circuit breaker, retry, rate limiter, and bulkhead patterns
+			Provides fault tolerance for microservice communication
+			Required for @CircuitBreaker and fallback functionality with Feign clients -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+		</dependency>
+
 		<!-- Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
