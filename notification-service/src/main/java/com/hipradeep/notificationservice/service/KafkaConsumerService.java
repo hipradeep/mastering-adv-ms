@@ -12,10 +12,18 @@ public class KafkaConsumerService {
     @KafkaListener(topicPartitions = @TopicPartition(topic = "user-events-v2", partitions = "1"), groupId = "notification-group")
     public void listenUserEvents(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
         System.out.println("Notification Service Received User Event from Partition " + partition + ": " + message);
+        if ("fail".equals(message)) {
+            throw new RuntimeException("Simulated failure for message: " + message);
+        }
     }
 
     @KafkaListener(topicPartitions = @TopicPartition(topic = "order-events-v2", partitions = "0"), groupId = "notification-group")
     public void listenOrderEvents(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
         System.out.println("Notification Service Received Order Event from Partition " + partition + ": " + message);
+    }
+
+    @KafkaListener(topics = "user-events-v2.DLT", groupId = "notification-group-dlt")
+    public void listenUserEventsDlt(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        System.out.println("DLT Listener Received from Partition " + partition + ": " + message);
     }
 }
