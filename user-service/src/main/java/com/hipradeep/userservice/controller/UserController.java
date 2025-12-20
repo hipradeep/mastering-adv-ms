@@ -14,23 +14,23 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public String createUser(@RequestBody String userData) {
+    public String createUser(@RequestBody String userData, @RequestParam(required = false) Integer partition) {
         String message = "USER_CREATED: " + userData;
-        kafkaProducerService.sendMessage(message);
-        return "User created event sent: " + message;
+        kafkaProducerService.sendMessage(message, partition);
+        return "User created event sent to partition " + (partition != null ? partition : "default") + ": " + message;
     }
 
     @PutMapping("/update")
-    public String updateUser(@RequestBody String userData) {
+    public String updateUser(@RequestBody String userData, @RequestParam(required = false) Integer partition) {
         String message = "USER_UPDATED: " + userData;
-        kafkaProducerService.sendMessage(message);
-        return "User updated event sent: " + message;
+        kafkaProducerService.sendMessage(message, partition);
+        return "User updated event sent to partition " + (partition != null ? partition : "default") + ": " + message;
     }
 
     @DeleteMapping("/delete")
-    public String deleteUser(@RequestBody String userId) {
+    public String deleteUser(@RequestBody String userId, @RequestParam(required = false) Integer partition) {
         String message = "USER_DELETED: " + userId;
-        kafkaProducerService.sendMessage(message);
-        return "User deleted event sent: " + message;
+        kafkaProducerService.sendMessage(message, partition);
+        return "User deleted event sent to partition " + (partition != null ? partition : "default") + ": " + message;
     }
 }

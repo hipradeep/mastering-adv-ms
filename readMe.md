@@ -1,93 +1,53 @@
 # Mastering Advanced Microservices
 
-A multi-module Maven project demonstrating microservices architecture.
+A multi-module Maven project demonstrating a microservices architecture with advanced Kafka patterns.
 
 ## Modules
-- `common-lib` - Shared utilities and DTOs
-- `gateway-service` - API Gateway
-- `config-server` - Configuration server
-- `user-service` - User management service
+- **user-service**: User management (Kafka Producer).
+- **order-service**: Order management (Kafka Consumer - Partition 0).
+- **notification-service**: Notification management (Kafka Consumer - Partition 1).
 
-# Build && Run 
-## clean, compile, install and test
-### auth-server
-```bash
-cd auth-server && mvn clean install && mvn spring-boot:run
-```
 
-### config-server
-```bash
-cd config-server && mvn clean install && mvn spring-boot:run
-```
+---
 
-### eureka-server
-```bash
-cd eureka-server && mvn clean install && mvn spring-boot:run
-```
+## Kafka Architecture & Partition Flow
 
-### gateway-service
-```bash
-cd gateway-service && mvn clean install && mvn spring-boot:run
-```
+This project implements a partitioned event flow where specific services listen to specific partitions of the same topic.
 
-### inventory-service
-```bash
-cd inventory-service && mvn clean install && mvn spring-boot:run
-```
+### Topics
+All topics are configured with **3 partitions** and `v2` suffix to ensure fresh creation.
+- `user-events-v2`
+- `order-events-v2`
+- `notification-events-v2`
 
-### notification-service
-```bash
-cd notification-server && mvn clean install && mvn spring-boot:run
-```
+### Event Flow
+The `user-service` publishes events to `user-events-v2`. The partition is determined by the client request.
 
-### order-service
-```bash
-cd order-service && mvn clean install && mvn spring-boot:run
-```
+1.  **Partition 0 Flow (Order Processing)**
+    *   **Request:** `POST /user/create?partition=0`
+    *   **Producer:** Sends message to `user-events-v2` (Partition 0).
+    *   **Consumer:** `order-service` listens ONLY to Partition 0.
+    *   **Result:** `order-service` processes the event; `notification-service` ignores it.
 
-### user-service
-```bash
-cd user-seribice && mvn clean install && mvn spring-boot:run
-```
+2.  **Partition 1 Flow (Notifications)**
+    *   **Request:** `POST /user/create?partition=1`
+    *   **Producer:** Sends message to `user-events-v2` (Partition 1).
+    *   **Consumer:** `notification-service` listens ONLY to Partition 1.
+    *   **Result:** `notification-service` processes the event; `order-service` ignores it.
 
-# Build && Run
-## clean, compile, install and without test
-### auth-server
-```bash
-cd auth-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Configuration
+- **User Service:** Producer. Can send to specific partitions.
+- **Order Service:** Consumer. `@KafkaListener(topicPartitions = @TopicPartition(topic = "user-events-v2", partitions = "0"))`
+- **Notification Service:** Consumer. `@KafkaListener(topicPartitions = @TopicPartition(topic = "user-events-v2", partitions = "1"))`
 
-### config-server
-```bash
-cd config-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+---
 
-### eureka-server
-```bash
-cd eureka-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+## Troubleshooting: Recent Issues
 
-### gateway-service
-```bash
-cd gateway-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
+### Kafka Partition Assignment Mismatch
+**Problem:** Messages intended for Partition 0 were landing in Partition 1 (or random partitions).
+**Cause:** The `partition` parameter was sent in the JSON Body (e.g., `{"partition": 0}`), but the Controller expected a Query Parameter. This resulted in `null` being passed to the Kafka Producer, triggering the default "Sticky Partitioner".
+**Solution:** Always pass the partition as a query parameter.
+*   **Correct:** `http://localhost:8082/user/create?partition=0`
+*   **Incorrect:** `http://localhost:8082/user/create` (with partition in body)
 
-### inventory-service
-```bash
-cd inventory-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### notification-service
-```bash
-cd notification-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### order-service
-```bash
-cd order-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### user-service
-```bash
-cd user-seribice && mvn clean install -DskipTests  && mvn spring-boot:run
-```
