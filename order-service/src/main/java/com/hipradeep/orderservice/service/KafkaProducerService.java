@@ -15,12 +15,4 @@ public class KafkaProducerService {
     public void sendMessage(String message) {
         kafkaTemplate.send("order-events", message);
     }
-
-    public void sendMessage(String message, Integer partition) {
-        if (partition != null) {
-            kafkaTemplate.send("order-events", partition, null, message);
-        } else {
-            kafkaTemplate.send("order-events", message);
-        }
-    }
 }
