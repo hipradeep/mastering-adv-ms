@@ -78,3 +78,14 @@ When implementing fallbacks for Rate Limiters, it is crucial to catch the specif
 
 - **Incorrect Approach**: Using `Throwable t` as the fallback argument catch-all errors. This causes the Rate Limiter fallback to swallow unrelated exceptions (like connection refused or timeouts) that should ideally trigger the Circuit Breaker or Retry logic.
 - **Correct Approach**: Using `RequestNotPermitted t` as the fallback argument ensures that the method is *only* invoked for rate limiting violations. Other exceptions propagate normally, allowing other resilience patterns (Circuit Breaker/Retry) to handle them appropriately.
+
+## Client-Side Timeout Demonstration
+
+To demonstrate configuring timeouts on the `RestTemplate` (Client):
+
+1. **Configuration**: The `user-service` `RestTemplate` is configured with a **2-second timeout** (connect & read).
+2. **Simulation**: The `order-service` has a `/api/order/slow` endpoint that sleeps for **5 seconds**.
+3. **Testing**:
+    - Ensure both services are running.
+    - Call the test endpoint: `curl http://localhost:8082/api/users/test-timeout`
+    - **Result**: The request will fail after ~2 seconds with a `ResourceAccessException` (Read timed out), proving that the client correctly gave up waiting for the slow server.
