@@ -15,6 +15,9 @@ public class OrderController {
     @Autowired
     private InventoryClient inventoryClient;
 
+    @Autowired
+    private com.hipradeep.orderservice.client.InventoryClientJitter inventoryClientJitter;
+
     @PostMapping
     public String placeOrder(@RequestParam String skuCode) {
         boolean inStock = inventoryClient.checkStock(skuCode);
@@ -23,6 +26,18 @@ public class OrderController {
             return "Order placed successfully for " + skuCode;
         } else {
             return "Order failed. Item " + skuCode + " is out of stock or service is down (Fallback executed).";
+        }
+    }
+
+    @PostMapping("/jitter")
+    public String placeOrderJitter(@RequestParam String skuCode) {
+        boolean inStock = inventoryClientJitter.checkStockWithJitter(skuCode);
+
+        if (inStock) {
+            return "Order (Jitter) placed successfully for " + skuCode;
+        } else {
+            return "Order (Jitter) failed. Item " + skuCode
+                    + " is out of stock or service is down (Fallback executed).";
         }
     }
 

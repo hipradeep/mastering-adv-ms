@@ -89,3 +89,20 @@ To demonstrate configuring timeouts on the `RestTemplate` (Client):
     - Ensure both services are running.
     - Call the test endpoint: `curl http://localhost:8082/api/users/test-timeout`
     - **Result**: The request will fail after ~2 seconds with a `ResourceAccessException` (Read timed out), proving that the client correctly gave up waiting for the slow server.
+
+## Jitter (Randomized Backoff) Demonstration
+
+To demonstrate preventing thundering herd problems using Jitter:
+
+1.  **User Service (Resilience4j)**:
+    - New endpoint: `/api/users/jitter/{userId}`
+    - Logic: Uses `OrderClientJitter`.
+    - **Note**: Config is **externalized** in `application.yml` (under `orderServiceJitter`), NOT in the Java annotation.
+    - Config: `waitDuration: 1s`, `randomizedWaitFactor: 0.5` -> Wait time is random between 0.5s and 1.5s.
+    - Test: `curl http://localhost:8082/api/users/jitter/1`
+
+2.  **Order Service (Spring Retry)**:
+    - New endpoint: `/api/order/jitter?skuCode=...`
+    - Logic: Uses `InventoryClientJitter` with `@Backoff(random = true)`.
+    - Config: Random delay between 1000ms and 3000ms.
+    - Test: `curl -X POST "http://localhost:8083/api/order/jitter?skuCode=iphone-13"`

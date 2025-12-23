@@ -30,6 +30,11 @@ resilience4j:
       orderService:
         maxAttempts: 3
         waitDuration: 1s
+      orderServiceJitter:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableRandomizedWait: true
+        randomizedWaitFactor: 0.5
   ratelimiter:
     instances:
       orderService:
