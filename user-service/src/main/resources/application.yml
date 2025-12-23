@@ -11,3 +11,11 @@ logging:
     org.springframework.boot.env: DEBUG    # Shows config loading
     org.springframework.core.env: DEBUG    # Shows property resolution
     com.hipradeep: TRACE                   # Your package for custom logging
+
+resilience4j:
+  ratelimiter:
+    instances:
+      backendA:
+        limitForPeriod: 5
+        limitRefreshPeriod: 60s
+        timeoutDuration: 0

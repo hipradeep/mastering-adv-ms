@@ -1,9 +1,8 @@
 package com.hipradeep.userservice.controller;
 
-
 import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.util.JsonUtils;
 import com.hipradeep.userservice.dto.UserResponse;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.List;
 public class UserController {
 
     @GetMapping("/{id}")
+    @RateLimiter(name = "backendA")
     public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
         // Simulate getting user from database
         UserResponse user = new UserResponse(id, "johndoe", "john@example.com", "John", "Doe");
@@ -26,8 +26,7 @@ public class UserController {
         // Simulate getting all users
         List<UserResponse> users = List.of(
                 new UserResponse(1L, "johndoe", "john@example.com", "John", "Doe"),
-                new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe")
-        );
+                new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe"));
 
         return ApiResponse.success(users);
     }
@@ -40,24 +39,10 @@ public class UserController {
                 userRequest.getUsername(),
                 userRequest.getEmail(),
                 userRequest.getFirstName(),
-                userRequest.getLastName()
-        );
+                userRequest.getLastName());
 
         return ApiResponse.success(createdUser);
     }
 
-    @GetMapping("/json-test")
-    public String testJsonUtils() {
-        // Test common lib JsonUtils
-        UserResponse user = new UserResponse(1L, "testuser", "test@example.com", "Test", "User");
 
-        String json = JsonUtils.toJson(user);
-        System.out.println("JSON Output: " + json);
-
-        // Convert back to object
-        UserResponse parsedUser = JsonUtils.fromJson(json, UserResponse.class);
-        System.out.println("Parsed User: " + parsedUser.getUsername());
-
-        return json;
-    }
 }
