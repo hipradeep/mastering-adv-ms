@@ -1,9 +1,8 @@
 package com.hipradeep.userservice.controller;
 
-
 import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.util.JsonUtils;
-import com.hipradeep.userservice.dto.UserResponse;
+import com.hipradeep.userservice.entity.User;
+import com.hipradeep.userservice.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,52 +11,40 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
-    @GetMapping("/{id}")
-    public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
-        // Simulate getting user from database
-        UserResponse user = new UserResponse(id, "johndoe", "john@example.com", "John", "Doe");
+    private final UserService userService;
 
-        // Using common lib ApiResponse
-        return ApiResponse.success(user);
-    }
-
-    @GetMapping
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        // Simulate getting all users
-        List<UserResponse> users = List.of(
-                new UserResponse(1L, "johndoe", "john@example.com", "John", "Doe"),
-                new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe")
-        );
-
-        return ApiResponse.success(users);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping
-    public ApiResponse<UserResponse> createUser(@RequestBody UserResponse userRequest) {
-        // Simulate user creation
-        UserResponse createdUser = new UserResponse(
-                3L,
-                userRequest.getUsername(),
-                userRequest.getEmail(),
-                userRequest.getFirstName(),
-                userRequest.getLastName()
-        );
-
-        return ApiResponse.success(createdUser);
+    public ApiResponse<User> createUser(@RequestBody User user) {
+        return ApiResponse.success(userService.createUser(user));
     }
 
-    @GetMapping("/json-test")
-    public String testJsonUtils() {
-        // Test common lib JsonUtils
-        UserResponse user = new UserResponse(1L, "testuser", "test@example.com", "Test", "User");
-
-        String json = JsonUtils.toJson(user);
-        System.out.println("JSON Output: " + json);
-
-        // Convert back to object
-        UserResponse parsedUser = JsonUtils.fromJson(json, UserResponse.class);
-        System.out.println("Parsed User: " + parsedUser.getUsername());
-
-        return json;
+    @GetMapping
+    public ApiResponse<List<User>> getAllUsers() {
+        return ApiResponse.success(userService.getAllUsers());
     }
+
+    @GetMapping("/{id}")
+    public ApiResponse<User> getUserById(@PathVariable Long id) {
+        return ApiResponse.success(userService.getUserById(id));
+    }
+
+    @GetMapping("/username/{username}")
+    public ApiResponse<User> getUserByUsername(@PathVariable String username) {
+        return ApiResponse.success(userService.getUserByUsername(username));
+    }
+
+    @GetMapping("/email/{email}")
+    public ApiResponse<User> getUserByEmail(@PathVariable String email) {
+        return ApiResponse.success(userService.getUserByEmail(email));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> deleteUser(@PathVariable Long id) {
+        return ApiResponse.success(userService.deleteUser(id));
+    }
+
 }
