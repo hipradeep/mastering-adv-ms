@@ -1,5 +1,6 @@
 package com.hipradeep.inventoryservice.controller;
 
+import com.hipradeep.inventoryservice.model.Inventory;
 import com.hipradeep.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class InventoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public String addStock(@RequestBody com.hipradeep.inventoryservice.model.Inventory inventory) {
+    public String addStock(@RequestBody Inventory inventory) {
         inventoryService.addStock(inventory);
         return "Stock Added/Updated Successfully";
     }

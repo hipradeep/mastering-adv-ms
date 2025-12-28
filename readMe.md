@@ -20,7 +20,7 @@ This project uses **Micrometer Tracing (Brave)** and **Zipkin** to trace request
 ### Implementation Details
 *   **Framework**: Spring Boot 3.5.3
 *   **Core Library**: `micrometer-tracing-bridge-brave`
-*   **Reporting**: `zipkin-reporter-brave`
+*   **Exporter**: `zipkin-reporter-brave`
 *   **Propagation**: Trace IDs and Span IDs are automatically propagated across HTTP calls using `RestTemplate`.
 
 ### Tracing Flow
@@ -31,9 +31,30 @@ When you place an order:
 4.  **Zipkin** collects these spans and visually displays the entire request lifecycle.
 
 ### Setup & Verification
-1.  **Start Zipkin**: `docker run -d -p 9411:9411 openzipkin/zipkin`
+1.  **Start Zipkin**:
+    *   Download `zipkin.jar` from [Zipkin Quickstart](https://zipkin.io/pages/quickstart.html).
+    *   Run: `java -jar zipkin.jar`
 2.  **Access UI**: `http://localhost:9411`
 3.  **Logs**: Check console logs for `[service-name, traceId, spanId]`.
+
+---
+
+## Infrastructure Services
+
+### 1. Eureka Discovery Server
+**Base URL**: `http://localhost:8761`
+*   **Role**: Service Registry. All microservices register themselves here.
+*   **Dashboard**: Access the UI to see running service instances.
+
+### 2. API Gateway
+**Base URL**: `http://localhost:8080`
+*   **Role**: Single Entry Point. Routes requests to appropriate microservices.
+*   **Routing**:
+    *   `/api/order/**` -> `order-service`
+    *   `/api/inventory/**` -> `inventory-service`
+    *   `/api/notification/**` -> `notification-service`
+    *   `/api/users/**` -> `user-service`
+*   **Usage**: Clients should primarily communicate with this service.
 
 ---
 
@@ -85,17 +106,27 @@ When you place an order:
 *   Maven 3.8+
 *   Docker (for Zipkin, PostgreSQL)
 
-### Run Services
-```bash
-# General command for each service
-cd <service-folder>
-mvn clean install
-mvn spring-boot:run
-```
+### Run Services (Automated)
+This project includes a startup script `run_all.bat` for Windows.
 
-**Recommended Order:**
-1.  Config Server / Eureka (if used)
-2.  Zipkin (`docker run ...`)
-3.  Databases (PostgreSQL)
-4.  Inventory, Notification, User Services
-5.  Order Service
+**Usage:**
+1.  Ensure `zipkin.jar` is in the project root.
+2.  Run `run_all.bat`.
+
+It will start:
+1.  Zipkin (Manual JAR)
+2.  Eureka Server
+3.  API Gateway
+4.  All Microservices
+
+### Troubleshooting & Configuration Notes
+1.  **Spring Cloud Compatibility**:
+    *   Since we are using Spring Boot 3.5.3, we have explicitly disabled the compatibility verifier in all `application.yml` files:
+        ```yaml
+        spring.cloud.compatibility-verifier.enabled: false
+        ```
+2.  **Hostname Resolution (UnknownHostException)**:
+    *   To fix DNS resolution issues on local Windows environments, all services are configured to register with Eureka using their IP address:
+        ```yaml
+        eureka.instance.prefer-ip-address: true
+        ```

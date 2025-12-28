@@ -2,6 +2,8 @@ package com.hipradeep.notificationservice.service;
 
 import com.hipradeep.notificationservice.model.Notification;
 import com.hipradeep.notificationservice.repository.NotificationRepository;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,14 +14,20 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final Tracer tracer;
 
     public void sendNotification(Long orderNumber) {
-        log.info("Sending notification for Order Number: {}", orderNumber);
-        Notification notification = Notification.builder()
-                .orderNumber(orderNumber)
-                .status("SENT")
-                .build();
-        notificationRepository.save(notification);
-        log.info("Notification sent and saved for Order Number: {}", orderNumber);
+        Span newSpan = tracer.nextSpan().name("notification-send");
+        try (Tracer.SpanInScope ws = tracer.withSpan(newSpan.start())) {
+            log.info("Sending notification for Order Number: {}", orderNumber);
+            Notification notification = Notification.builder()
+                    .orderNumber(orderNumber)
+                    .status("SENT")
+                    .build();
+            notificationRepository.save(notification);
+            log.info("Notification sent and saved for Order Number: {}", orderNumber);
+        } finally {
+            newSpan.end();
+        }
     }
 }

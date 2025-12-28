@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
+    private final io.micrometer.tracing.Tracer tracer;
 
     public boolean isInStock(String skuCode) {
         log.info("Checking stock for skuCode: {}", skuCode);
@@ -32,17 +33,22 @@ public class InventoryService {
     }
 
     public boolean reduceStock(String skuCode, Integer quantity) {
-        log.info("Reducing stock for skuCode: {} by {}", skuCode, quantity);
-        return inventoryRepository.findBySkuCode(skuCode).map(inventory -> {
-            if (inventory.getQuantity() >= quantity) {
-                inventory.setQuantity(inventory.getQuantity() - quantity);
-                inventoryRepository.save(inventory);
-                log.info("Stock reduced successfully");
-                return true;
-            } else {
-                log.warn("Insufficient stock for skuCode: {}", skuCode);
-                return false;
-            }
-        }).orElse(false);
+        io.micrometer.tracing.Span newSpan = tracer.nextSpan().name("inventory-reduction");
+        try (io.micrometer.tracing.Tracer.SpanInScope ws = tracer.withSpan(newSpan.start())) {
+            log.info("Reducing stock for skuCode: {} by {}", skuCode, quantity);
+            return inventoryRepository.findBySkuCode(skuCode).map(inventory -> {
+                if (inventory.getQuantity() >= quantity) {
+                    inventory.setQuantity(inventory.getQuantity() - quantity);
+                    inventoryRepository.save(inventory);
+                    log.info("Stock reduced successfully");
+                    return true;
+                } else {
+                    log.warn("Insufficient stock for skuCode: {}", skuCode);
+                    return false;
+                }
+            }).orElse(false);
+        } finally {
+            newSpan.end();
+        }
     }
 }

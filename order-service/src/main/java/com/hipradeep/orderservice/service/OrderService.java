@@ -16,34 +16,41 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
+    private final io.micrometer.tracing.Tracer tracer;
 
     public String placeOrder(Order orderRequest) {
-        log.info("Placing Order for Product Code: {}", orderRequest.getSkuCode());
+        io.micrometer.tracing.Span newSpan = tracer.nextSpan().name("order-processing");
 
-        // Call Inventory Service
-        // Call Inventory Service
-        log.info("Calling Inventory Service to reduce stock");
-        Boolean stockReduced = restTemplate.exchange(
-                "http://localhost:8083/api/inventory/reduce/" + orderRequest.getSkuCode() + "?quantity="
-                        + orderRequest.getQuantity(),
-                org.springframework.http.HttpMethod.PUT,
-                null,
-                Boolean.class).getBody();
+        try (io.micrometer.tracing.Tracer.SpanInScope ws = tracer.withSpan(newSpan.start())) {
+            log.info("Placing Order for Product Code: {}", orderRequest.getSkuCode());
 
-        if (Boolean.TRUE.equals(stockReduced)) {
-            orderRequest.setOrderNumber(UUID.randomUUID().toString());
-            orderRepository.save(orderRequest);
-            log.info("Order Placed Successfully with Order Number: {}", orderRequest.getOrderNumber());
+            // Call Inventory Service
+            log.info("Calling Inventory Service to reduce stock");
+            Boolean stockReduced = restTemplate.exchange(
+                    "http://localhost:8083/api/inventory/reduce/" + orderRequest.getSkuCode() + "?quantity="
+                            + orderRequest.getQuantity(),
+                    org.springframework.http.HttpMethod.PUT,
+                    null,
+                    Boolean.class).getBody();
 
-            // Call Notification Service
-            log.info("Calling Notification Service to send notification");
-            restTemplate.postForObject("http://localhost:8084/api/notification", orderRequest.getId(), String.class);
+            if (Boolean.TRUE.equals(stockReduced)) {
+                orderRequest.setOrderNumber(UUID.randomUUID().toString());
+                orderRepository.save(orderRequest);
+                log.info("Order Placed Successfully with Order Number: {}", orderRequest.getOrderNumber());
 
-            return "Order Placed Successfully";
-        } else {
-            log.warn("Product is not in stock or insufficient quantity, please try again later");
-            throw new IllegalArgumentException(
-                    "Product is not in stock or insufficient quantity, please try again later");
+                // Call Notification Service
+                log.info("Calling Notification Service to send notification");
+                restTemplate.postForObject("http://localhost:8084/api/notification", orderRequest.getId(),
+                        String.class);
+
+                return "Order Placed Successfully";
+            } else {
+                log.warn("Product is not in stock or insufficient quantity, please try again later");
+                throw new IllegalArgumentException(
+                        "Product is not in stock or insufficient quantity, please try again later");
+            }
+        } finally {
+            newSpan.end();
         }
     }
 }

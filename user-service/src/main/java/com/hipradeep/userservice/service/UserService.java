@@ -2,6 +2,8 @@ package com.hipradeep.userservice.service;
 
 import com.hipradeep.userservice.model.User;
 import com.hipradeep.userservice.repository.UserRepository;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,10 +16,16 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final Tracer tracer;
 
     public User createUser(User user) {
-        log.info("Saving user: {}", user.getFirstName());
-        return userRepository.save(user);
+        Span newSpan = tracer.nextSpan().name("user-creation");
+        try (Tracer.SpanInScope ws = tracer.withSpan(newSpan.start())) {
+            log.info("Saving user: {}", user.getFirstName());
+            return userRepository.save(user);
+        } finally {
+            newSpan.end();
+        }
     }
 
     public User getUserById(Long id) {
