@@ -38,8 +38,8 @@ public class CacheConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
-        // Specific configuration for 'products' cache (1 hour)
-        RedisCacheConfiguration productsCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+        // Specific configuration for 'likes' cache (1 hour)
+        RedisCacheConfiguration likesCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1))
                 .disableCachingNullValues()
                 .serializeKeysWith(
@@ -49,7 +49,7 @@ public class CacheConfig {
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
         cacheConfigurations.put("users", usersCacheConfig);
-        cacheConfigurations.put("products", productsCacheConfig);
+        cacheConfigurations.put("likes", likesCacheConfig);
 
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(defaultConfig)
