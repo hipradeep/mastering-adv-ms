@@ -1,11 +1,8 @@
 package com.hipradeep.userservice;
 
 import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.util.JsonUtils;
-import com.hipradeep.userservice.dto.UserResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.client.RestTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
