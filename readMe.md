@@ -52,7 +52,7 @@ The **User Service** utilizes **Redis** to cache frequently accessed data.
 - **Default TTL**: 30 Minutes.
 - **Specific Caches**:
   - `users`: **2 Minutes**.
-  - `products`: **1 Hour**.
+  - `likes`: **1 Hour**.
 - **Serialization**: JSON (GenericJackson2JsonRedisSerializer) for readable values.
 - **Null Values**: Disabled.
 
