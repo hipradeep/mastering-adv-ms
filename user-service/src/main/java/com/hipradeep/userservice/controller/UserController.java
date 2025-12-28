@@ -42,6 +42,11 @@ public class UserController {
         return ApiResponse.success(userService.getUserByEmail(email));
     }
 
+    @PutMapping("/{id}")
+    public ApiResponse<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+        return ApiResponse.success(userService.updateUser(id, user));
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<String> deleteUser(@PathVariable Long id) {
         return ApiResponse.success(userService.deleteUser(id));

@@ -1,26 +1,25 @@
 package com.hipradeep.userservice.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.index.Indexed;
-
 import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "User", timeToLive = 600) // 10 minutes TTL
+@Entity
+@Table(name = "users")
 public class User implements Serializable {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Indexed
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Indexed
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String firstName;
