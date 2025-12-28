@@ -1,130 +1,101 @@
 # Mastering Advanced Microservices
 
-A multi-module Maven project demonstrating microservices architecture.
+A multi-module Maven project demonstrating a microservices architecture with Spring Boot 3.x, featuring distributed tracing, service-to-service communication, and layered architecture.
 
 ## Modules
-- `common-lib` - Shared utilities and DTOs
-- `gateway-service` - API Gateway
-- `config-server` - Configuration server
-- `user-service` - User management service
+- **common-lib**: Shared utilities and DTOs.
+- **gateway-service**: API Gateway.
+- **config-server**: Centralized configuration server.
+- **user-service**: User management.
+- **inventory-service**: Inventory management (Stock check/update).
+- **order-service**: Order processing (Calls Inventory & Notification).
+- **notification-service**: Notification handling.
 
-# Build && Run 
-## clean, compile, install and test
-### auth-server
+---
+
+## Distributed Tracing Implementation
+
+This project uses **Micrometer Tracing (Brave)** and **Zipkin** to trace requests across microservices.
+
+### Implementation Details
+*   **Framework**: Spring Boot 3.5.3
+*   **Core Library**: `micrometer-tracing-bridge-brave`
+*   **Reporting**: `zipkin-reporter-brave`
+*   **Propagation**: Trace IDs and Span IDs are automatically propagated across HTTP calls using `RestTemplate`.
+
+### Tracing Flow
+When you place an order:
+1.  **Order Service** receives `POST /api/order`. A distinct **Trace ID** is generated.
+2.  **Order Service** calls **Inventory Service** (`PUT /api/inventory/reduce`). The Trace ID is passed in headers.
+3.  **Order Service** calls **Notification Service** (`POST /api/notification`). The same Trace ID is passed.
+4.  **Zipkin** collects these spans and visually displays the entire request lifecycle.
+
+### Setup & Verification
+1.  **Start Zipkin**: `docker run -d -p 9411:9411 openzipkin/zipkin`
+2.  **Access UI**: `http://localhost:9411`
+3.  **Logs**: Check console logs for `[service-name, traceId, spanId]`.
+
+---
+
+## API Documentation
+
+### 1. User Service
+**Base URL**: `http://localhost:8082`
+
+| Method | Endpoint | Description | Body / Params |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/users` | Create User | `{"username": "john", "email": "john@example.com", "firstName": "John", "lastName": "Doe"}` |
+| `GET` | `/api/users/{id}` | Get User | Path param: `id` |
+| `GET` | `/api/users` | List Users | - |
+| `GET` | `/api/users/trace` | Simulate Trace | - |
+
+### 2. Inventory Service
+**Base URL**: `http://localhost:8083` (Typically runs on 8083)
+
+*Assumed Ports for local dev: Inventory: 8083, Order: 8081, Notification: 8084, User: 8082 (Adjust as per `application.yml`)*
+
+| Method | Endpoint | Description | Body / Params |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/inventory/{sku-code}` | Check Stock | Path param: `sku-code` |
+| `POST` | `/api/inventory` | Add/Update Stock | `{"skuCode": "iphone_13", "quantity": 100}` |
+| `PUT` | `/api/inventory/reduce/{sku-code}` | Reduce Stock | Path: `sku-code`, Param: `quantity` |
+
+### 3. Order Service
+**Base URL**: `http://localhost:8081`
+
+| Method | Endpoint | Description | Body / Params |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/order` | Place Order | `{"skuCode": "iphone_13", "price": 1200, "quantity": 1}` |
+
+**Flow**: Checks/Reduces Inventory -> Saves Order -> Sends Notification.
+
+### 4. Notification Service
+**Base URL**: `http://localhost:8084`
+
+| Method | Endpoint | Description | Body / Params |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/notification` | Send Notification | Body: `orderId` (Long) |
+
+---
+
+## Build & Run
+
+### Prerequisites
+*   Java 21
+*   Maven 3.8+
+*   Docker (for Zipkin, PostgreSQL)
+
+### Run Services
 ```bash
-cd auth-server && mvn clean install && mvn spring-boot:run
+# General command for each service
+cd <service-folder>
+mvn clean install
+mvn spring-boot:run
 ```
 
-### config-server
-```bash
-cd config-server && mvn clean install && mvn spring-boot:run
-```
-
-### eureka-server
-```bash
-cd eureka-server && mvn clean install && mvn spring-boot:run
-```
-
-### gateway-service
-```bash
-cd gateway-service && mvn clean install && mvn spring-boot:run
-```
-
-### inventory-service
-```bash
-cd inventory-service && mvn clean install && mvn spring-boot:run
-```
-
-### notification-service
-```bash
-cd notification-server && mvn clean install && mvn spring-boot:run
-```
-
-### order-service
-```bash
-cd order-service && mvn clean install && mvn spring-boot:run
-```
-
-### user-service
-```bash
-cd user-seribice && mvn clean install && mvn spring-boot:run
-```
-
-# Build && Run
-## clean, compile, install and without test
-### auth-server
-```bash
-cd auth-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### config-server
-```bash
-cd config-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### eureka-server
-```bash
-cd eureka-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### gateway-service
-```bash
-cd gateway-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### inventory-service
-```bash
-cd inventory-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### notification-service
-```bash
-cd notification-server && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### order-service
-```bash
-cd order-service && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-### user-service
-```bash
-cd user-seribice && mvn clean install -DskipTests  && mvn spring-boot:run
-```
-
-# Distributed Tracing (User Service)
-Implemented using **Micrometer Tracing** (Brave) and **Zipkin** for Spring Boot 3.x.
-*Note: `spring-cloud-starter-sleuth` is removed in Spring Boot 3.x and replaced by Micrometer Tracing.*
-
-### Dependencies
-- `spring-boot-starter-actuator`
-- `micrometer-tracing-bridge-brave`
-- `zipkin-reporter-brave`
-
-### Configuration
-`application.yml`:
-```yaml
-management:
-  tracing:
-    sampling:
-      probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: http://localhost:9411/api/v2/spans
-```
-
-### Verification
-1. **Run Zipkin**: `docker run -d -p 9411:9411 openzipkin/zipkin`
-2. **Access UI**: [http://localhost:9411](http://localhost:9411)
-3. **Simulate Trace**: `curl http://localhost:8082/api/users/trace`
-4. **Result**: Check logs for `[user-service,traceId,spanId]` and view trace in Zipkin UI.
-
-### Comparison: Spring Cloud Sleuth (Boot 2.x) vs. Micrometer Tracing (Boot 3.x)
-
-| Feature | Spring Boot 2.x (Sleuth) | Spring Boot 3.x (Micrometer Tracing) |
-| :--- | :--- | :--- |
-| **Library** | `spring-cloud-starter-sleuth` | **Removed**. Replaced by Micrometer Tracing. |
-| **Tracing Core** | Brave (shaded/internal) | `micrometer-tracing-bridge-brave` or `...-otel` |
-| **Reporting** | `spring-cloud-sleuth-zipkin` | `zipkin-reporter-brave` |
-| **Actuator** | Integrated | Requires `spring-boot-starter-actuator` explicitly |
-| **Status** | Maintenance / End of Life | **Current Standard** |
+**Recommended Order:**
+1.  Config Server / Eureka (if used)
+2.  Zipkin (`docker run ...`)
+3.  Databases (PostgreSQL)
+4.  Inventory, Notification, User Services
+5.  Order Service
