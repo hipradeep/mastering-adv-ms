@@ -10,3 +10,10 @@ user-service/target/
 order-service/target/
 inventory-service/target/
 notification-service/target/
+/.vscode/
+/kafka/
+/saga-choreography-pattern/
+/common-dtos/target/
+/payment-service/target/
+/kafka/logs/
+/kafka/tmp/

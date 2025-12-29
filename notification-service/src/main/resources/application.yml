@@ -1,13 +1,25 @@
-server:
-  port: 8085
-
 spring:
   application:
     name: notification-service
-
-
-logging:
-  level:
-    org.springframework.boot.env: DEBUG    # Shows config loading
-    org.springframework.core.env: DEBUG    # Shows property resolution
-    com.hipradeep: TRACE                   # Your package for custom logging
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notification_database
+    username: postgres
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    function:
+      scan:
+        enabled: false
+    stream:
+      function:
+        definition: notificationEventConsumer
+      bindings:
+        notificationEventConsumer-in-0:
+          destination: inventory-event
+server:
+  port: 8085

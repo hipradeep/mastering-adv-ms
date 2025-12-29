@@ -1,8 +1,8 @@
 spring:
   application:
-    name: order-service
+    name: payment-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/order_database
+    url: jdbc:postgresql://localhost:5432/payment_database
     username: postgres
     password: 1234
   jpa:
@@ -17,20 +17,13 @@ spring:
         enabled: false
     stream:
       function:
-        definition: orderSupplier;paymentEventConsumer;inventoryEventConsumer
+        definition: paymentProcessor;inventoryEventConsumer
       bindings:
-        orderSupplier-out-0:
+        paymentProcessor-in-0:
           destination: order-event
-        paymentEventConsumer-in-0:
+        paymentProcessor-out-0:
           destination: payment-event
         inventoryEventConsumer-in-0:
           destination: inventory-event
 server:
-  port: 8082
-
-
-logging:
-  level:
-    org.springframework.boot.env: DEBUG    # Shows config loading
-    org.springframework.core.env: DEBUG    # Shows property resolution
-    com.hipradeep: TRACE                   # Your package for custom logging
+  port: 8083
