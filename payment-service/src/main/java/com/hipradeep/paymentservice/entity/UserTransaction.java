@@ -16,7 +16,6 @@ import jakarta.persistence.GeneratedValue;
 @NoArgsConstructor
 public class UserTransaction {
     @Id
-    @GeneratedValue
     private Integer orderId;
     private Integer userId;
     private Integer amount;

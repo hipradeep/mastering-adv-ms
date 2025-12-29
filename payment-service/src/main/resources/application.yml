@@ -27,3 +27,9 @@ spring:
           destination: inventory-event
 server:
   port: 8086
+
+logging:
+  level:
+    com.hipradeep: TRACE
+    org.springframework.cloud.stream: DEBUG
+    org.apache.kafka: INFO

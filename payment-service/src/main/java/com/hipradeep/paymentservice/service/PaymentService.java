@@ -34,7 +34,8 @@ public class PaymentService {
                 new UserBalance(102, 3000),
                 new UserBalance(103, 4200),
                 new UserBalance(104, 20000),
-                new UserBalance(105, 999)).toList());
+                new UserBalance(105, 999),
+                new UserBalance(1, 1000)).toList());
     }
 
     @Transactional
@@ -47,16 +48,31 @@ public class PaymentService {
                 orderRequestDto.getUserId(),
                 orderRequestDto.getAmount(),
                 orderRequestDto.getProductId());
+
         return userBalanceRepository.findById(orderRequestDto.getUserId())
-                .filter(ub -> ub.getPrice() > orderRequestDto.getAmount())
+                .filter(ub -> {
+                    boolean hasBalance = ub.getPrice() >= orderRequestDto.getAmount();
+                    if (!hasBalance) {
+                        log.warn("Insufficient balance for userId: {}. Required: {}, Available: {}",
+                                orderRequestDto.getUserId(), orderRequestDto.getAmount(), ub.getPrice());
+                    }
+                    return hasBalance;
+                })
                 .map(ub -> {
+                    log.info("Processing payment for userId: {} and orderId: {}", orderRequestDto.getUserId(),
+                            orderRequestDto.getOrderId());
                     ub.setPrice(ub.getPrice() - orderRequestDto.getAmount());
                     userTransactionRepository.save(new UserTransaction(
                             orderRequestDto.getOrderId(),
                             orderRequestDto.getUserId(),
                             orderRequestDto.getAmount()));
+                    log.info("Payment successful for orderId: {}", orderRequestDto.getOrderId());
                     return new PaymentEvent(paymentRequestDto, PaymentStatus.PAYMENT_COMPLETED);
-                }).orElse(new PaymentEvent(paymentRequestDto, PaymentStatus.PAYMENT_FAILED));
+                }).orElseGet(() -> {
+                    log.error("Payment failed for orderId: {} - User not found or insufficient balance",
+                            orderRequestDto.getOrderId());
+                    return new PaymentEvent(paymentRequestDto, PaymentStatus.PAYMENT_FAILED);
+                });
     }
 
     @Transactional

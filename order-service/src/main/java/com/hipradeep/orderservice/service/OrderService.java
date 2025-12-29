@@ -5,9 +5,9 @@ import com.hipradeep.orderservice.repository.OrderRepository;
 import com.hipradeep.saga.commons.dto.OrderRequestDto;
 import com.hipradeep.saga.commons.event.OrderStatus;
 import com.hipradeep.saga.commons.event.OrderEvent;
-import com.hipradeep.saga.commons.event.PaymentStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +19,7 @@ public class OrderService {
     private OrderRepository orderRepository;
 
     @Autowired
-    private OrderStatusPublisher orderStatusPublisher;
+    private StreamBridge streamBridge;
 
     @Transactional
     public Order createOrder(OrderRequestDto orderRequestDto) {
@@ -27,8 +27,8 @@ public class OrderService {
         Order order = orderRepository.save(convertDtoToEntity(orderRequestDto));
         orderRequestDto.setOrderId(order.getId());
         // produce kafka event with status ORDER_CREATED
-        log.info("Publishing OrderEvent for OrderId: {}", order.getId());
-        orderStatusPublisher.publishOrderEvent(new OrderEvent(orderRequestDto, OrderStatus.ORDER_CREATED));
+        log.info("Publishing OrderEvent for OrderId: {} via StreamBridge", order.getId());
+        streamBridge.send("orderSupplier-out-0", new OrderEvent(orderRequestDto, OrderStatus.ORDER_CREATED));
         return order;
     }
 

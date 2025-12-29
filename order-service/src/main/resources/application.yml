@@ -17,7 +17,7 @@ spring:
         enabled: false
     stream:
       function:
-        definition: orderSupplier;paymentEventConsumer;inventoryEventConsumer
+        definition: paymentEventConsumer;inventoryEventConsumer
       bindings:
         orderSupplier-out-0:
           destination: order-event
