@@ -26,4 +26,4 @@ spring:
         inventoryEventConsumer-in-0:
           destination: inventory-event
 server:
-  port: 8083
+  port: 8086

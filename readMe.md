@@ -6,42 +6,48 @@ A multi-module Maven project demonstrating the **Saga Choreography Pattern** for
 
 | Service | Port | Description |
 | :--- | :--- | :--- |
-| **API Gateway** | 8080 | Entry point for all requests |
-| **Eureka Server** | 8761 | Service Discovery |
-| **Config Server** | 8888 | Externalized Configuration |
-| **Order Service** | 8082 | Orchestrates Saga; handles order lifecycle |
-| **User Service** | 8081 | Manages user profiles and authentication |
-| **Payment Service** | 8083 | Processes payments and handles refunds |
-| **Inventory Service** | 8084 | Manages product stock and deductions |
-| **Notification Service** | 8085 | Logs final Saga outcomes and alerts |
+| **Gateway Service** | 8080 | Entry point for all requests |
+| **Auth Server** | 8081 | Authentication and Authorization |
+| **User Service** | 8082 | User Profile management |
+| **Order Service** | 8083 | Handles order lifecycle |
+| **Inventory Service** | 8084 | Stock management |
+| **Notification Service** | 8085 | Notifications |
+| **Payment Service** | 8086 | Payments |
 
----
+## Build && Run 
+### Gateway (Port 8080)
+```bash
+cd gateway-service && mvn spring-boot:run
+```
 
-## 🔄 Saga Choreography Flow
+### Auth Server (Port 8081)
+```bash
+cd auth-server && mvn spring-boot:run
+```
 
-The system uses event-driven choreography to maintain data consistency across microservices without a central orchestrator.
+### User Service
+```bash
+cd user-service && mvn clean install && mvn spring-boot:run
+```
 
-### 📉 Interaction Flow: Success Case (Payment & Inventory OK)
+### Order Service (Port 8083)
+```bash
+cd order-service && mvn spring-boot:run
+```
 
-```text
-[ Client ]
-    |
-    | 1. POST /orders
-    v
-[ Order Service ] (Status: ORDER_CREATED)
-    |
-    | 2. Publish OrderEvent (Topic: order-event)
-    v
-[ Payment Service ] (Status: PAYMENT_COMPLETED)
-    |
-    | 3. Publish PaymentEvent (Topic: payment-event) ----------+
-    v                                                          |
-[ Inventory Service ] (Status: INVENTORY_UPDATED)              | 4. Update Status
-    |                                                          |
-    | 5. Publish InventoryEvent (Topic: inventory-event)        |
-    v                                                          v
-[ Notification Service ] <--------------------------- [ Order Service ] (Status: ORDER_COMPLETED)
-      (Logs Success)
+### Inventory Service (Port 8084)
+```bash
+cd inventory-service && mvn spring-boot:run
+```
+
+### Notification Service (Port 8085)
+```bash
+cd notification-service && mvn spring-boot:run
+```
+
+### Payment Service (Port 8086)
+```bash
+cd payment-service && mvn spring-boot:run
 ```
 
 **Step-by-Step Success Execution:**
@@ -93,22 +99,22 @@ The system uses event-driven choreography to maintain data consistency across mi
 
 ## 🛠️ API Documentation
 
-### **Order Service** (Port 8082)
-`POST http://localhost:8082/orders` - Initiates a new order and starts the Saga flow.
+### **Order Service** (Port 8083)
+`POST http://localhost:8083/orders` - Initiates a new order and starts the Saga flow.
 ```bash
-curl -X POST http://localhost:8082/orders -H "Content-Type: application/json" -d "{\"userId\": 1, \"productId\": 101, \"amount\": 100}"
+curl -X POST http://localhost:8083/orders -H "Content-Type: application/json" -d "{\"userId\": 1, \"productId\": 101, \"amount\": 100}"
 ```
 
-### **User Service** (Port 8081)
-`POST http://localhost:8081/api/users` - Creates a new user profile.
+### **User Service** (Port 8082)
+`POST http://localhost:8082/api/users` - Creates a new user profile.
 ```bash
-curl -X POST http://localhost:8081/api/users -H "Content-Type: application/json" -d "{\"username\": \"john_doe\", \"email\": \"john@example.com\", \"password\": \"securepassword123\"}"
+curl -X POST http://localhost:8082/api/users -H "Content-Type: application/json" -d "{\"username\": \"john_doe\", \"email\": \"john@example.com\", \"password\": \"securepassword123\"}"
 ```
 
-### **Payment Service** (Port 8083)
-`GET http://localhost:8083/payment` - Retrieves all processed transactions.
+### **Payment Service** (Port 8086)
+`GET http://localhost:8086/payment` - Retrieves all processed transactions.
 ```bash
-curl -X GET http://localhost:8083/payment
+curl -X GET http://localhost:8086/payment
 ```
 
 ### **Inventory Service** (Port 8084)
