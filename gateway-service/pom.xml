@@ -51,6 +51,11 @@
 
 	<!-- Dependencies -->
 	<dependencies>
+		<dependency>
+			<groupId>net.logstash.logback</groupId>
+			<artifactId>logstash-logback-encoder</artifactId>
+			<version>7.4</version>
+		</dependency>
 
 		<!-- Core Spring Web (needed only if fallback endpoints or filters use REST controllers) -->
 		<dependency>
