@@ -40,7 +40,6 @@ echo Building Services...
 start /b cmd /c "cd order-service && mvn clean install -DskipTests"
 start /b cmd /c "cd payment-service && mvn clean install -DskipTests"
 start /b cmd /c "cd inventory-service && mvn clean install -DskipTests"
-start /b cmd /c "cd notification-service && mvn clean install -DskipTests"
 
 echo Waiting for builds to complete (approx 30s)...
 timeout /t 30
@@ -68,8 +67,6 @@ start "Payment Service" cmd /k "java -jar payment-service/target/payment-service
 echo Starting Inventory Service...
 start "Inventory Service" cmd /k "java -jar inventory-service/target/inventory-service-0.0.1-SNAPSHOT.jar"
 
-echo Starting Notification Service...
-start "Notification Service" cmd /k "java -jar notification-service/target/notification-service-0.0.1-SNAPSHOT.jar"
 
 echo ==================================================
 echo All services started!
