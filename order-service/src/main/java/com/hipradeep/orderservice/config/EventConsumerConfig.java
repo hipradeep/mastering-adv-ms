@@ -35,20 +35,20 @@ public class EventConsumerConfig {
         };
     }
 
-    @Bean
-    public Consumer<InventoryEvent> inventoryEventConsumer() {
-        return (inventory) -> {
-            log.info("Order Service received InventoryEvent: {}", inventory);
-            orderRepository.findById(inventory.getOrderRequestDto().getOrderId()).ifPresent(order -> {
-                if (InventoryStatus.INVENTORY_UPDATED.equals(inventory.getInventoryStatus())) {
-                    log.info("Inventory updated for OrderId: {}. Completing order.", order.getId());
-                    order.setOrderStatus(OrderStatus.ORDER_COMPLETED);
-                } else {
-                    log.error("Inventory check failed for OrderId: {}. Cancelling order.", order.getId());
-                    order.setOrderStatus(OrderStatus.ORDER_CANCELLED);
-                }
-                orderRepository.save(order);
-            });
-        };
-    }
+//    @Bean
+//    public Consumer<InventoryEvent> inventoryEventConsumer() {
+//        return (inventory) -> {
+//            log.info("Order Service received InventoryEvent: {}", inventory);
+//            orderRepository.findById(inventory.getOrderRequestDto().getOrderId()).ifPresent(order -> {
+//                if (InventoryStatus.INVENTORY_UPDATED.equals(inventory.getInventoryStatus())) {
+//                    log.info("Inventory updated for OrderId: {}. Completing order.", order.getId());
+//                    order.setOrderStatus(OrderStatus.ORDER_COMPLETED);
+//                } else {
+//                    log.error("Inventory check failed for OrderId: {}. Cancelling order.", order.getId());
+//                    order.setOrderStatus(OrderStatus.ORDER_CANCELLED);
+//                }
+//                orderRepository.save(order);
+//            });
+//        };
+//    }
 }

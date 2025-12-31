@@ -9,8 +9,7 @@ import com.hipradeep.saga.commons.event.PaymentEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
 import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -23,29 +22,33 @@ public class PaymentConsumerConfig {
     private PaymentService paymentService;
 
     @Bean
-    public Function<Flux<OrderEvent>, Flux<PaymentEvent>> paymentProcessor() {
-        return orderEventFlux -> orderEventFlux
-                .doOnNext(event -> log.info("Payment Processor received OrderEvent: {}", event))
-                .flatMap(this::processPayment)
-                .doOnNext(event -> log.info("Payment Processor emitting PaymentEvent: {}", event));
+    public Function<OrderEvent, PaymentEvent> paymentProcessor() {
+        return orderEvent -> {
+            log.info("Payment Processor received OrderEvent: {}", orderEvent);
+            PaymentEvent paymentEvent = processPayment(orderEvent);
+            log.info("Payment Processor emitting PaymentEvent: {}", paymentEvent);
+            return paymentEvent;
+        };
     }
 
-    private Mono<PaymentEvent> processPayment(OrderEvent orderEvent) {
+    private PaymentEvent processPayment(OrderEvent orderEvent) {
         // if ORDER_CREATED -> process payment
         // if ORDER_CANCELLED -> (maybe refund)
         if (OrderStatus.ORDER_CREATED.equals(orderEvent.getOrderStatus())) {
-            return Mono.fromSupplier(() -> paymentService.newOrderEvent(orderEvent));
+            return paymentService.newOrderEvent(orderEvent);
         } else {
-            return Mono.fromRunnable(() -> paymentService.cancelOrderEvent(orderEvent));
+            paymentService.cancelOrderEvent(orderEvent);
+            return new PaymentEvent();
         }
     }
 
-    @Bean
-    public Consumer<InventoryEvent> inventoryEventConsumer() {
-        return inventory -> {
-            if (InventoryStatus.INVENTORY_FAILED.equals(inventory.getInventoryStatus())) {
-                paymentService.cancelOrderEvent(inventory);
-            }
-        };
-    }
+    // @Bean
+    // public Consumer<InventoryEvent> inventoryEventConsumer() {
+    // return inventory -> {
+    // if (InventoryStatus.INVENTORY_FAILED.equals(inventory.getInventoryStatus()))
+    // {
+    // paymentService.cancelOrderEvent(inventory);
+    // }
+    // };
+    // }
 }

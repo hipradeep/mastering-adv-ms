@@ -25,6 +25,10 @@ spring:
           destination: payment-event
         inventoryEventConsumer-in-0:
           destination: inventory-event
+      kafka:
+        binder:
+          configuration:
+            spring.json.trusted.packages: "*"
 server:
   port: 8083
 
