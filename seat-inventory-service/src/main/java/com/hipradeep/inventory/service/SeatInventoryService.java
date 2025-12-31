@@ -64,6 +64,14 @@ public class SeatInventoryService {
         seatInventoryRepository.deleteById(id);
     }
 
+    /**
+     * Listen for Booking Created Events to reserve seats.
+     * Topic: booking-created-events (KafkaConfigProperties.BOOKING_CREATED_TOPIC)
+     * Action:
+     *  - Verify seat availability.
+     *  - If available -> Lock seats & publish SeatReservedEvent(reserved=true).
+     *  - If unavailable -> publish SeatReservedEvent(reserved=false).
+     */
     @Transactional
     @KafkaListener(topics = KafkaConfigProperties.BOOKING_CREATED_TOPIC, groupId = KafkaConfigProperties.INVENTORY_GROUP_ID)
     public void handleBookingCreated(BookingCreatedEvent event) {
@@ -99,6 +107,13 @@ public class SeatInventoryService {
         }
     }
 
+    /**
+     * Listen for Payment Events to finalize seat status.
+     * Topic: booking-payment-events (KafkaConfigProperties.PAYMENT_PROCESSED_TOPIC)
+     * Action:
+     *  - If payment success -> Mark seats as BOOKED.
+     *  - If payment failed -> Release seats (set to AVAILABLE).
+     */
     @Transactional
     @KafkaListener(topics = KafkaConfigProperties.PAYMENT_PROCESSED_TOPIC, groupId = KafkaConfigProperties.INVENTORY_GROUP_ID)
     public void handlePaymentEvent(BookingPaymentEvent event) {
