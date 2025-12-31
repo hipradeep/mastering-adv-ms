@@ -20,4 +20,14 @@ public class BookingController {
     public BookingResponse createBooking(@RequestBody BookingRequest request) {
         return bookingService.createBooking(request);
     }
+
+    @org.springframework.web.bind.annotation.GetMapping
+    public java.util.List<com.hipradeep.booking.entity.Booking> getAllBookings() {
+        return bookingService.getAllBookings();
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/{bookingId}")
+    public BookingResponse getBookingStatus(@org.springframework.web.bind.annotation.PathVariable String bookingId) {
+        return bookingService.getBookingStatus(bookingId);
+    }
 }

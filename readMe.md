@@ -6,180 +6,88 @@ A multi-module Maven project demonstrating the **Saga Choreography Pattern** for
 
 | Service | Port | Description |
 | :--- | :--- | :--- |
-| **Gateway Service** | 8080 | Entry point for all requests |
-| **Auth Server** | 8081 | Authentication and Authorization |
-| **User Service** | 8082 | User Profile management |
-| **Order Service** | 8083 | Handles order lifecycle |
-| **Inventory Service** | 8084 | Stock management |
-| **Notification Service** | 8085 | Notifications |
-| **Payment Service** | 8086 | Payments |
+| **Booking Service** | 8081 | Orchestrator/Initiator (Saga Start) |
+| **Seat Inventory Service** | 8082 | Manages Seat Availability & Locking |
+| **Payment Service** | 8083 | Manages User Balance & Payments |
+| **Kafka** | 9092 | Message Broker |
+| **Postgres** | 5432 | Database (Shared for demo: `booking_database`) |
 
-## Build && Run 
-### Gateway (Port 8080)
-```bash
-cd gateway-service && mvn spring-boot:run
-```
+## 🏗️ Build & Run
 
-### Auth Server (Port 8081)
-```bash
-cd auth-server && mvn spring-boot:run
-```
+### Prerequisites
+- Java 17
+- Maven
+- PostgreSQL (Port 5432, user: `postgres`, pass: `1234`)
 
-### User Service
-```bash
-cd user-service && mvn clean install && mvn spring-boot:run
-```
-
-### Order Service (Port 8083)
-```bash
-cd order-service && mvn spring-boot:run
-```
-
-### Inventory Service (Port 8084)
-```bash
-cd inventory-service && mvn spring-boot:run
-```
-
-### Notification Service (Port 8085)
-```bash
-cd notification-service && mvn spring-boot:run
-```
-
-### Payment Service (Port 8086)
-```bash
-cd payment-service && mvn spring-boot:run
-```
-
-**Step-by-Step Success Execution:**
-1. **Client** sends an order request to **Order Service**.
-2. **Order Service** creates an order in `ORDER_CREATED` state and emits an `OrderEvent`.
-3. **Payment Service** consumes the event, processes payment, and emits a `PaymentEvent`.
-4. **Inventory Service** consumes the payment success, deducts stock, and emits an `InventoryEvent`.
-5. **Order Service** listens to all events and updates the final status to `ORDER_COMPLETED`.
-6. **Notification Service** logs the final outcome.
-
-### 🛑 Interaction Flow: Failure Case (Payment Failed)
-
-```text
-[ Client ]
-    |
-    | 1. POST /orders
-    v
-[ Order Service ] (Status: ORDER_CREATED)
-    |
-    | 2. Publish OrderEvent (Topic: order-event)
-    v
-[ Payment Service ] (Status: PAYMENT_FAILED)
-    |
-    | 3. Publish PaymentEvent (Topic: payment-event)
-    v
-[ Order Service ] (Status: ORDER_CANCELLED)
-    |
-    | 4. Log Failure Callback
-    v
-[ Notification Service ]
-      (Logs Failure/Cancellation)
-```
-
-**Step-by-Step Failure Execution:**
-1. **Client** sends an order request to **Order Service**.
-2. **Order Service** emits an `OrderEvent` with status `ORDER_CREATED`.
-3. **Payment Service** fails to process payment and emits a `PaymentEvent` with status `PAYMENT_FAILED`.
-4. **Order Service** consumes the failure and rolls back by setting status to `ORDER_CANCELLED`.
-5. **Notification Service** logs the cancellation for monitoring.
-
-### 📉 Status Transitions
-- **ORDER_CREATED**: Order received, awaiting payment.
-- **PAYMENT_COMPLETED**: Funds authorized/captured.
-- **PAYMENT_FAILED**: Transaction rejected (leads to `ORDER_CANCELLED`).
-- **INVENTORY_UPDATED**: Stock deducted successfully (leads to `ORDER_COMPLETED`).
-- **INVENTORY_FAILED**: Out of stock (leads to `ORDER_CANCELLED` and `PAYMENT_CANCELLED`).
-
----
+### Steps
+1.  **Start Infrastructure**:
+    Run the provided script to build projects and start Kafka, Zookeeper, and all Microservices.
+    ```powershell
+    run_all_with_kafka.bat
+    ```
 
 ## 🛠️ API Documentation
 
-### **Order Service** (Port 8083)
-`POST http://localhost:8083/orders` - Initiates a new order and starts the Saga flow.
-```bash
-curl -X POST http://localhost:8083/orders -H "Content-Type: application/json" -d "{\"userId\": 1, \"productId\": 101, \"amount\": 100}"
-```
+### **1. Booking Service** (Port 8081)
+**Create Booking (Saga Start)**
+- **Endpoint**: `POST /bookings`
+- **Description**: Initiates a booking, locks seats, and processes payment.
+- **Request**:
+  ```json
+  {
+    "userId": "101",
+    "showId": "101",
+    "seatIds": ["1", "2"],
+    "amount": 100
+  }
+  ```
+- **Response**: `200 OK` with Status `PENDING` (Final status updated asynchronously).
 
-### **User Service** (Port 8082)
-`POST http://localhost:8082/api/users` - Creates a new user profile.
-```bash
-curl -X POST http://localhost:8082/api/users -H "Content-Type: application/json" -d "{\"username\": \"john_doe\", \"email\": \"john@example.com\", \"password\": \"securepassword123\"}"
-```
+**Get Booking Status**
+- **Endpoint**: `GET /bookings/{bookingId}`
+- **Response**:
+  ```json
+  {
+    "reservationId": "UUID",
+    "userId": "101",
+    "status": "CONFIRMED"
+  }
+  ```
 
-### **Payment Service** (Port 8086)
-`GET http://localhost:8086/payment` - Retrieves all processed transactions.
-```bash
-curl -X GET http://localhost:8086/payment
-```
+**Get All Bookings**
+- **Endpoint**: `GET /bookings`
 
-### **Inventory Service** (Port 8084)
-`GET http://localhost:8084/inventory` - Checks current stock levels for products.
-```bash
-curl -X GET http://localhost:8084/inventory
-```
+### **2. Seat Inventory Service** (Port 8082)
+Manages seat inventory.
 
----
+**CRUD Endpoints**
+- **Add Seat**: `POST /inventory`
+  ```json
+  { "seatId": 1, "showId": "101", "status": "AVAILABLE" }
+  ```
+- **Get All Seats**: `GET /inventory`
+- **Get Seats by Show**: `GET /inventory/show/{showId}`
+- **Update Status**: `PUT /inventory/{id}/status?status=LOCKED`
+- **Delete Seat**: `DELETE /inventory/{id}`
 
-## 🧪 Troubleshooting
+### **3. Payment Service** (Port 8083)
+Event-driven service. Reacts to `seat-reserved-events` to process payments.
 
-### Inventory Service Startup Error
-If you encounter `BeanDefinitionStoreException` related to `ContextFunctionCatalogAutoConfiguration` in Spring Boot 3.5.3, add the following to your `application.yml`:
-```yaml
-spring:
-  cloud:
-    function:
-      scan:
-        enabled: false
-```
-*Note: This bypasses automatic function scanning which can conflict with manual bean definitions in newer Spring Boot versions.*
+**Endpoints**
+- **Get All Balances**: `GET /payments`
+- **Get Balance by User**: `GET /payments/{userId}`
 
----
+## 🔄 Saga Flow (Choreography)
 
-## 🏗️ Build & Run
-1. Start Kafka/Zookeeper.
-2. Build all modules: `mvn clean install -DskipTests`.
+1.  **Booking Service**: Creates Booking (`PENDING`) -> Emits `BookingCreatedEvent`.
+2.  **Seat Inventory**: Consumes Event -> Locks Seats -> Emits `SeatReservedEvent` (Success/Fail).
+3.  **Payment Service**: Consumes `SeatReservedEvent` -> Deducts Balance -> Emits `BookingPaymentEvent` (Success/Fail).
+4.  **Completion**:
+    - **Booking Service**: Updates status to `CONFIRMED` or `FAILED`.
+    - **Seat Inventory**: Updates status to `BOOKED` or `AVAILABLE` (Release).
 
----
+## 🧪 Testing Scenarios
 
-## 🛠️ Development Process (Step-by-Step)
-
-Developing a Saga Choreography project follows a structured event-driven approach. Here is the process used to build this system:
-
-### 1. Define Shared Data Models (`common-dtos`)
-- Create a central module to store shared DTOs, Event classes, and Enums.
-- Define `OrderStatus`, `PaymentStatus`, and `InventoryStatus`.
-- Create `OrderEvent`, `PaymentEvent`, and `InventoryEvent` structures.
-
-### 2. Configure Messaging Infrastructure
-- Set up **Kafka** and **Spring Cloud Stream** in each microservice.
-- Define function bindings in `application.yml` (e.g., `orderSupplier`, `paymentProcessor`).
-- Use `spring-cloud-starter-stream-kafka` for high-throughput messaging.
-
-### 3. Implement the Order Entry Point
-- In `Order Service`, create a REST controller to receive order requests.
-- Save the order to the database with a `ORDER_CREATED` status.
-- Publish the initial `OrderEvent` to start the Saga.
-
-### 4. Implement Reactive Consumers (Choreography)
-- **Payment Service**: Listen to `order-event`. Deduct funds. Publish `PaymentEvent` (Success or Failure).
-- **Inventory Service**: Listen to `payment-event` (Success). Deduct stock. Publish `InventoryEvent` (Success or Failure).
-- **Notification Service**: Listen to all events to provide a holistic view/audit log.
-
-### 5. Establish Compensation & Rollback Logic
-- **Order Service Compensation**: Listen for `PAYMENT_FAILED` or `INVENTORY_FAILED` to transition the order to `ORDER_CANCELLED`.
-- **Payment Service Compensation**: If inventory fails, the Payment Service must listen to `INVENTORY_FAILED` to initiate a refund.
-
-### 6. Centralize Build & Standardize Ports
-- Create a **Root POM** to manage all microservices as a multi-module project.
-- Align dependency versions (e.g., Spring Boot 3.5.3 + Spring Cloud 2024.0.x).
-- Standardize ports across services to avoid conflicts (8081, 8082, etc.).
-
-### 7. Global Fixes & Troubleshooting
-- Apply startup fixes like `spring.cloud.function.scan.enabled: false` to resolve modern Spring Boot compatibility issues.
-- Enforce **Java 17** across the entire project for consistency.
-
+1.  **Happy Path**: User with sufficient balance books available seats. -> **CONFIRMED**, **BOOKED**.
+2.  **Insufficient Funds**: User with low balance. -> **FAILED**, Seats Released to **AVAILABLE**.
+3.  **Seat Unavailable**: User tries to book locked/booked seats. -> **FAILED**.

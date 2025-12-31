@@ -15,8 +15,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -51,6 +53,22 @@ public class BookingService {
         log.info("Booking created and event published: {}", event);
 
         return new BookingResponse(bookingId, bookingRequest.userId(), bookingRequest.showId(), bookingRequest.amount(), "PENDING");
+    }
+
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+    public BookingResponse getBookingStatus(String bookingId) {
+        return bookingRepository.findByBookingId(bookingId)
+                .map(booking -> new BookingResponse(
+                        booking.getBookingId(),
+                        booking.getUserId(),
+                        booking.getShowId(),
+                        booking.getAmount(),
+                        booking.getStatus()
+                ))
+                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
     }
 
     // Listener for Payment Events

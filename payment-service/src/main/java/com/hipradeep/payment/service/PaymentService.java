@@ -37,6 +37,15 @@ public class PaymentService {
         }
     }
 
+    public java.util.List<UserBalance> getAllUserBalances() {
+        return userBalanceRepository.findAll();
+    }
+
+    public UserBalance getUserBalance(int userId) {
+        return userBalanceRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    }
+
     @Transactional
     @KafkaListener(topics = KafkaConfigProperties.SEAT_RESERVED_TOPIC, groupId = KafkaConfigProperties.PAYMENT_GROUP_ID)
     public void processPayment(SeatReservedEvent event) {
