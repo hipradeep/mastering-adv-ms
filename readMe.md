@@ -79,12 +79,70 @@ Event-driven service. Reacts to `seat-reserved-events` to process payments.
 
 ## 🔄 Saga Flow (Choreography)
 
+![Saga Diagram](images/Saga%20Choreography%20in%20Microservices%20🔥%20Movie%20Ticket%20Booking%20System%20Explained.png)
+
 1.  **Booking Service**: Creates Booking (`PENDING`) -> Emits `BookingCreatedEvent`.
 2.  **Seat Inventory**: Consumes Event -> Locks Seats -> Emits `SeatReservedEvent` (Success/Fail).
 3.  **Payment Service**: Consumes `SeatReservedEvent` -> Deducts Balance -> Emits `BookingPaymentEvent` (Success/Fail).
 4.  **Completion**:
     - **Booking Service**: Updates status to `CONFIRMED` or `FAILED`.
     - **Seat Inventory**: Updates status to `BOOKED` or `AVAILABLE` (Release).
+
+### 🧩 Deep Dive: Transaction Flow & Events
+
+This section details the event-driven interaction for a successful booking.
+
+#### **Step 1: Booking Initiated**
+- **Service**: `Booking Service`
+- **Action**: User creates a booking.
+- **State**: `PENDING`
+- **Topic**: `booking-created-events`
+- **Event Payload** (`BookingCreatedEvent`):
+  ```json
+  {
+    "bookingId": "c4d3-...",
+    "userId": "101",
+    "showId": "101",
+    "seatIds": ["1", "2"],
+    "amount": 100
+  }
+  ```
+
+#### **Step 2: Seat Reservation**
+- **Service**: `Seat Inventory Service`
+- **Action**: Consumes `BookingCreatedEvent`. Checks availability and locks seats.
+- **State**: Seats set to `LOCKED`.
+- **Topic**: `seat-reserved-events`
+- **Event Payload** (`SeatReservedEvent`):
+  ```json
+  {
+    "bookingId": "c4d3-...",
+    "userId": "101",
+    "reserved": true,
+    "amount": 100
+  }
+  ```
+  *(If locking fails, `reserved` is `false`)*
+
+#### **Step 3: Payment Processing**
+- **Service**: `Payment Service`
+- **Action**: Consumes `SeatReservedEvent`. Deducts user balance.
+- **Topic**: `booking-payment-events`
+- **Event Payload** (`BookingPaymentEvent`):
+  ```json
+  {
+    "bookingId": "c4d3-...",
+    "paymentCompleted": true,
+    "amount": 100
+  }
+  ```
+  *(If balance insufficient, `paymentCompleted` is `false`)*
+
+#### **Step 4: Finalization**
+- **Service**: `Booking Service` & `Seat Inventory Service`
+- **Action**: Both consume `BookingPaymentEvent`.
+    - **Booking Service**: Updates status to `CONFIRMED` (if payment success) or `FAILED`.
+    - **Seat Inventory Service**: Updates seats to `BOOKED` (if payment success) or releases them to `AVAILABLE`.
 
 ## 🧪 Testing Scenarios
 
