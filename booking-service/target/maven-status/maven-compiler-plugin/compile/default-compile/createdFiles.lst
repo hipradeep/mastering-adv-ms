@@ -1,5 +1,0 @@
-com\hipradeep\booking\repository\BookingRepository.class
-com\hipradeep\booking\BookingApplication.class
-com\hipradeep\booking\controller\BookingController.class
-com\hipradeep\booking\entity\Booking.class
-com\hipradeep\booking\service\BookingService.class
