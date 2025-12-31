@@ -198,3 +198,9 @@ Visualizing topics is much easier with a GUI.
 2.  **Conduktor:** A powerful desktop client (free for dev) that shows visual graphs of partitions, consumer lag, and broker health.
 3.  **Kafdrop / UI for Apache Kafka:** Web-based UIs that you can run as a Docker container.
 
+---
+ 
+
+
+
+
