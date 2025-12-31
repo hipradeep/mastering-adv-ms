@@ -14,9 +14,9 @@ public class PaymentProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishBookingPaymentEvent(String bookingId, boolean paymentCompleted, long amount) {
-        BookingPaymentEvent paymentEvent = new BookingPaymentEvent(bookingId, paymentCompleted, amount);
-        kafkaTemplate.send(KafkaConfigProperties.PAYMENT_PROCESSED_TOPIC, paymentEvent);
+    public void publishBookingPaymentEvent(String bookingId, String userId, String showId, java.util.List<String> seatIds, boolean paymentCompleted, long amount) {
+        BookingPaymentEvent paymentEvent = new BookingPaymentEvent(bookingId, userId, showId, seatIds, paymentCompleted, amount);
+        kafkaTemplate.send(KafkaConfigProperties.PAYMENT_EVENTS_TOPIC, bookingId, paymentEvent);
         log.info("PaymentProducer: Published BookingPaymentEvent: {}", paymentEvent);
     }
 }

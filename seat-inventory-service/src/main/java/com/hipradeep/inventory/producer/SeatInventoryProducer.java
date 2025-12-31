@@ -14,9 +14,9 @@ public class SeatInventoryProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishSeatReservedEvent(String bookingId, String userId, boolean reserved, long amount) {
-        SeatReservedEvent reservedEvent = new SeatReservedEvent(bookingId, userId, reserved, amount);
-        kafkaTemplate.send(KafkaConfigProperties.SEAT_RESERVED_TOPIC, reservedEvent);
+    public void publishSeatReservedEvent(String bookingId, String userId, String showId, java.util.List<String> seatIds, boolean reserved, long amount) {
+        SeatReservedEvent reservedEvent = new SeatReservedEvent(bookingId, userId, showId, seatIds, reserved, amount);
+        kafkaTemplate.send(KafkaConfigProperties.SEAT_RESERVED_TOPIC, bookingId, reservedEvent);
         if (reserved) {
             log.info("SeatInventoryProducer: Seats locked and event published for bookingId {}", bookingId);
         } else {

@@ -16,10 +16,7 @@ public class BookingController {
 
     private final BookingService bookingService;
 
-    @PostMapping
-    public BookingResponse createBooking(@RequestBody BookingRequest request) {
-        return bookingService.createBooking(request);
-    }
+
 
     @org.springframework.web.bind.annotation.GetMapping
     public java.util.List<com.hipradeep.booking.entity.Booking> getAllBookings() {

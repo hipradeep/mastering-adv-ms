@@ -20,14 +20,24 @@ public class SeatInventoryService {
 
     @PostConstruct
     public void initSeats() {
-        if(seatInventoryRepository.count()==0) {
-            List<SeatInventory> seats = Stream.iterate(1L, i -> i + 1)
+        // Init Show 101
+        if(seatInventoryRepository.countByShowId("101") == 0) {
+            List<SeatInventory> seats101 = Stream.iterate(1L, i -> i + 1)
                     .limit(100)
                     .map(id -> new SeatInventory(null, id, "101", "AVAILABLE", null))
                     .collect(Collectors.toList());
-            
-            seatInventoryRepository.saveAll(seats);
+            seatInventoryRepository.saveAll(seats101);
             log.info("Initialized Seat Inventory with 100 seats for Show 101");
+        }
+
+        // Init Show 102
+        if(seatInventoryRepository.countByShowId("102") == 0) {
+            List<SeatInventory> seats102 = Stream.iterate(101L, i -> i + 1)
+                    .limit(100)
+                    .map(id -> new SeatInventory(null, id, "102", "AVAILABLE", null))
+                    .collect(Collectors.toList());
+            seatInventoryRepository.saveAll(seats102);
+            log.info("Initialized Seat Inventory with 100 seats for Show 102");
         }
     }
 

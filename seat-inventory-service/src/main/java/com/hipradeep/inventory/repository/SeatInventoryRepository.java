@@ -10,4 +10,5 @@ import java.util.List;
 public interface SeatInventoryRepository extends JpaRepository<SeatInventory, Long> {
     List<SeatInventory> findByShowId(String showId);
     List<SeatInventory> findByBookingId(String bookingId);
+    long countByShowId(String showId);
 }

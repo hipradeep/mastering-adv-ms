@@ -1,7 +1,7 @@
 package com.hipradeep.booking.service;
 
 import com.hipradeep.booking.entity.Booking;
-import com.hipradeep.booking.producer.BookingProducer;
+
 import com.hipradeep.booking.repository.BookingRepository;
 import com.hipradeep.saga.commons.dto.BookingRequest;
 import com.hipradeep.saga.commons.dto.BookingResponse;
@@ -20,32 +20,22 @@ import java.util.UUID;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
-    private final BookingProducer bookingProducer;
-
-    @Transactional
-    public BookingResponse createBooking(BookingRequest bookingRequest) {
-        String bookingId = UUID.randomUUID().toString();
-        Booking booking = new Booking();
-        booking.setBookingId(bookingId);
-        booking.setUserId(bookingRequest.userId());
-        booking.setShowId(bookingRequest.showId());
-        booking.setSeatIds(String.join(",", bookingRequest.seatIds()));
-        booking.setAmount(bookingRequest.amount());
-        booking.setStatus("PENDING");
-
+    public void processBooking(BookingCreatedEvent event) {
+        log.info("Processing booking event for id: {}", event.bookingId());
+        Booking booking = bookingRepository.findByBookingId(event.bookingId())
+                .orElse(new Booking());
+        
+        if (booking.getBookingId() == null) {
+            booking.setBookingId(event.bookingId());
+            booking.setUserId(event.userId());
+            booking.setShowId(event.showId());
+            if (event.seatIds() != null) {
+                booking.setSeatIds(String.join(",", event.seatIds()));
+            }
+            booking.setAmount(event.amount());
+        }
+        booking.setStatus(event.status());
         bookingRepository.save(booking);
-
-        BookingCreatedEvent event = new BookingCreatedEvent(
-                bookingId,
-                bookingRequest.userId(),
-                bookingRequest.showId(),
-                bookingRequest.seatIds(),
-                bookingRequest.amount()
-        );
-
-        bookingProducer.publishBookingCreatedEvent(event);
-
-        return new BookingResponse(bookingId, bookingRequest.userId(), bookingRequest.showId(), bookingRequest.amount(), "PENDING");
     }
 
     public List<Booking> getAllBookings() {

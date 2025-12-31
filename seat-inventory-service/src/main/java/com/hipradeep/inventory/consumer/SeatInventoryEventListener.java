@@ -4,8 +4,8 @@ import com.hipradeep.inventory.entity.SeatInventory;
 import com.hipradeep.inventory.producer.SeatInventoryProducer;
 import com.hipradeep.inventory.repository.SeatInventoryRepository;
 import com.hipradeep.saga.commons.KafkaConfigProperties;
-import com.hipradeep.saga.commons.event.BookingCreatedEvent;
-import com.hipradeep.saga.commons.event.BookingPaymentEvent;
+
+import com.hipradeep.saga.commons.event.SeatReservedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -23,19 +23,19 @@ public class SeatInventoryEventListener {
     private final SeatInventoryRepository seatInventoryRepository;
     private final SeatInventoryProducer seatInventoryProducer;
 
-    /**
-     * Listen for Booking Created Events to reserve seats.
-     * Topic: booking-created-events (KafkaConfigProperties.BOOKING_CREATED_TOPIC)
-     * Action:
-     *  - Verify seat availability.
-     *  - If available -> Lock seats & publish SeatReservedEvent(reserved=true).
-     *  - If unavailable -> publish SeatReservedEvent(reserved=false).
-     */
     @Transactional
-    @KafkaListener(topics = KafkaConfigProperties.BOOKING_CREATED_TOPIC, groupId = KafkaConfigProperties.INVENTORY_GROUP_ID)
-    public void handleBookingCreated(BookingCreatedEvent event) {
-        log.info("SeatInventoryEventListener: Received BookingCreatedEvent: {}", event);
+    @KafkaListener(topics = KafkaConfigProperties.SEAT_RESERVED_CMD_TOPIC, groupId = KafkaConfigProperties.INVENTORY_GROUP_ID)
+    public void handleSeatReservedCommand(SeatReservedEvent event) {
+        log.info("SeatInventoryEventListener: Received Command: {}", event);
 
+        if (event.reserved()) {
+            handleReservation(event);
+        } else {
+            handleRelease(event);
+        }
+    }
+
+    private void handleReservation(SeatReservedEvent event) {
         List<Long> requestedSeats = event.seatIds().stream()
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
@@ -56,36 +56,22 @@ public class SeatInventoryEventListener {
             });
             seatInventoryRepository.saveAll(targetSeats);
             
-            seatInventoryProducer.publishSeatReservedEvent(event.bookingId(), event.userId(), true, event.amount());
+            // Reply with Success
+            seatInventoryProducer.publishSeatReservedEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), true, event.amount());
         } else {
-            seatInventoryProducer.publishSeatReservedEvent(event.bookingId(), event.userId(), false, event.amount());
+            // Reply with Failure
+            seatInventoryProducer.publishSeatReservedEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), false, event.amount());
         }
     }
 
-    /**
-     * Listen for Payment Events to finalize seat status.
-     * Topic: booking-payment-events (KafkaConfigProperties.PAYMENT_PROCESSED_TOPIC)
-     * Action:
-     *  - If payment success -> Mark seats as BOOKED.
-     *  - If payment failed -> Release seats (set to AVAILABLE).
-     */
-    @Transactional
-    @KafkaListener(topics = KafkaConfigProperties.PAYMENT_PROCESSED_TOPIC, groupId = KafkaConfigProperties.INVENTORY_GROUP_ID)
-    public void handlePaymentEvent(BookingPaymentEvent event) {
-        log.info("SeatInventoryEventListener: Received Payment Event: {}", event);
-        
+    private void handleRelease(SeatReservedEvent event) {
+        log.info("SeatInventoryEventListener: Rolling back (releasing) seats for bookingId: {}", event.bookingId());
         List<SeatInventory> lockedSeats = seatInventoryRepository.findByBookingId(event.bookingId());
         
-        if (event.paymentCompleted()) {
-            lockedSeats.forEach(s -> s.setStatus("BOOKED"));
-            log.info("SeatInventoryEventListener: Seats BOOKED for bookingId {}", event.bookingId());
-        } else {
-            lockedSeats.forEach(s -> {
-                s.setStatus("AVAILABLE");
-                s.setBookingId(null);
-            });
-            log.info("SeatInventoryEventListener: Seats RELEASED for failed bookingId {}", event.bookingId());
-        }
+        lockedSeats.forEach(s -> {
+            s.setStatus("AVAILABLE");
+            s.setBookingId(null);
+        });
         seatInventoryRepository.saveAll(lockedSeats);
     }
 }

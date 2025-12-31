@@ -3,7 +3,7 @@ package com.hipradeep.payment.consumer;
 import com.hipradeep.payment.repository.UserBalanceRepository;
 import com.hipradeep.payment.producer.PaymentProducer;
 import com.hipradeep.saga.commons.KafkaConfigProperties;
-import com.hipradeep.saga.commons.event.SeatReservedEvent;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,25 +18,18 @@ public class PaymentEventListener {
     private final UserBalanceRepository userBalanceRepository;
     private final PaymentProducer paymentProducer;
 
-    /**
-     * Listen for Seat Reservation Events to initiate payment.
-     * Topic: seat-reserved-events (KafkaConfigProperties.SEAT_RESERVED_TOPIC)
-     * Action:
-     *  - Verify seat reserved (reserved=true).
-     *  - Deduct Amount from User Balance.
-     *  - Publish BookingPaymentEvent (success=true/false).
-     */
     @Transactional
-    @KafkaListener(topics = KafkaConfigProperties.SEAT_RESERVED_TOPIC, groupId = KafkaConfigProperties.PAYMENT_GROUP_ID)
-    public void processPayment(SeatReservedEvent event) {
-        log.info("PaymentEventListener: Received SeatReservedEvent: {}", event);
-
-        if (!event.reserved()) {
-            log.info("PaymentEventListener: Seat reservation failed for bookingId {}, skipping payment.", event.bookingId());
-            return;
-        }
+    @KafkaListener(topics = KafkaConfigProperties.PAYMENT_EVENTS_CMD_TOPIC, groupId = KafkaConfigProperties.PAYMENT_GROUP_ID)
+    public void processPayment(com.hipradeep.saga.commons.event.BookingPaymentEvent event) {
+        log.info("PaymentEventListener: Received BookingPaymentEvent Command: {}", event);
 
         // Check Balance using userId from event
+        if(event.userId() == null) {
+             log.error("PaymentEventListener: userId is null for bookingId {}", event.bookingId());
+             paymentProducer.publishBookingPaymentEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), false, event.amount());
+             return;
+        }
+
         int userId = Integer.parseInt(event.userId());
 
         userBalanceRepository.findById(userId).ifPresentOrElse(balance -> {
@@ -44,14 +37,14 @@ public class PaymentEventListener {
                 balance.setPrice(balance.getPrice() - event.amount());
                 userBalanceRepository.save(balance);
                 
-                paymentProducer.publishBookingPaymentEvent(event.bookingId(), true, event.amount());
+                paymentProducer.publishBookingPaymentEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), true, event.amount());
                 log.info("PaymentEventListener: Payment successful for bookingId {}", event.bookingId());
             } else {
-                paymentProducer.publishBookingPaymentEvent(event.bookingId(), false, event.amount());
+                paymentProducer.publishBookingPaymentEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), false, event.amount());
                 log.error("PaymentEventListener: Insufficient balance for bookingId {}", event.bookingId());
             }
         }, () -> {
-            paymentProducer.publishBookingPaymentEvent(event.bookingId(), false, event.amount());
+            paymentProducer.publishBookingPaymentEvent(event.bookingId(), event.userId(), event.showId(), event.seatIds(), false, event.amount());
             log.error("PaymentEventListener: User {} not found for bookingId {}", userId, event.bookingId());
         });
     }

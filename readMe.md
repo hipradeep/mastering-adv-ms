@@ -1,14 +1,16 @@
-# Mastering Advanced Microservices (MAMS) - Saga Choreography
+# Mastering Advanced Microservices (MAMS) - Saga Orchestration
 
-A multi-module Maven project demonstrating the **Saga Choreography Pattern** for distributed transactions using Spring Boot, Spring Cloud Stream, and Kafka.
+A multi-module Maven project demonstrating the **Saga Orchestration Pattern** for distributed transactions using Spring Boot, Spring Cloud Stream, and Kafka.
 
 ## 🚀 Service Architecture & Ports
 
+
 | Service | Port | Description |
 | :--- | :--- | :--- |
-| **Booking Service** | 8081 | Orchestrator/Initiator (Saga Start) |
-| **Seat Inventory Service** | 8082 | Manages Seat Availability & Locking |
-| **Payment Service** | 8083 | Manages User Balance & Payments |
+| **Booking Orchestrator** | 8084 | **Initiator/Coordinator**. Handles Booking Request and coordinates the Saga. |
+| **Booking Service** | 8081 | **Data Store**. Persists Booking state based on Orchestrator events. |
+| **Seat Inventory Service** | 8082 | **Participant**. Lock/Release seats based on commands. |
+| **Payment Service** | 8083 | **Participant**. Process payments based on commands. |
 | **Kafka** | 9092 | Message Broker |
 | **Postgres** | 5432 | Database (Shared for demo: `booking_database`) |
 
@@ -28,10 +30,10 @@ A multi-module Maven project demonstrating the **Saga Choreography Pattern** for
 
 ## 🛠️ API Documentation
 
-### **1. Booking Service** (Port 8081)
+### **1. Booking Orchestrator** (Port 8084)
 **Create Booking (Saga Start)**
-- **Endpoint**: `POST /bookings`
-- **Description**: Initiates a booking, locks seats, and processes payment.
+- **Endpoint**: `POST /orchestrator/booking`
+- **Description**: Entry point for the Saga. Coordinates Inventory and Payment.
 - **Request**:
   ```json
   {
@@ -41,111 +43,58 @@ A multi-module Maven project demonstrating the **Saga Choreography Pattern** for
     "amount": 100
   }
   ```
-- **Response**: `200 OK` with Status `PENDING` (Final status updated asynchronously).
+- **Response**: `200 OK` with Status `PENDING` (Final status processed asynchronously).
 
-**Get Booking Status**
-- **Endpoint**: `GET /bookings/{bookingId}`
-- **Response**:
-  ```json
-  {
-    "reservationId": "UUID",
-    "userId": "101",
-    "status": "CONFIRMED"
-  }
-  ```
+### **2. Booking Service** (Port 8081)
+Read-only view of bookings (updates handled via Kafka).
 
-**Get All Bookings**
-- **Endpoint**: `GET /bookings`
+- **Get Booking Status**: `GET /bookings/{bookingId}`
+- **Get All Bookings**: `GET /bookings`
 
-### **2. Seat Inventory Service** (Port 8082)
-Manages seat inventory.
+### **3. Seat Inventory Service** (Port 8082)
+Manages seat inventory. Listens to `seat-reserved-commands`.
 
-**CRUD Endpoints**
-- **Add Seat**: `POST /inventory`
-  ```json
-  { "seatId": 1, "showId": "101", "status": "AVAILABLE" }
-  ```
-- **Get All Seats**: `GET /inventory`
-- **Get Seats by Show**: `GET /inventory/show/{showId}`
-- **Update Status**: `PUT /inventory/{id}/status?status=LOCKED`
-- **Delete Seat**: `DELETE /inventory/{id}`
+### **4. Payment Service** (Port 8083)
+Manages balances. Listens to `booking-payment-commands`.
 
-### **3. Payment Service** (Port 8083)
-Event-driven service. Reacts to `seat-reserved-events` to process payments.
+## 🔄 Saga Flow (Orchestration)
 
-**Endpoints**
-- **Get All Balances**: `GET /payments`
-- **Get Balance by User**: `GET /payments/{userId}`
+![Saga Orchestration](images/Saga%20Orchestration%20in%20Microservices%20Explained%20with%20Real%20Movie%20Booking%20Example.png)
 
-## 🔄 Saga Flow (Choreography)
+![Architecture](images/img.png)
 
-![Saga Diagram](images/Saga%20Choreography%20in%20Microservices%20🔥%20Movie%20Ticket%20Booking%20System%20Explained.png)
+The **Booking Orchestrator** centralizes the decision-making process.
 
-1.  **Booking Service**: Creates Booking (`PENDING`) -> Emits `BookingCreatedEvent`.
-2.  **Seat Inventory**: Consumes Event -> Locks Seats -> Emits `SeatReservedEvent` (Success/Fail).
-3.  **Payment Service**: Consumes `SeatReservedEvent` -> Deducts Balance -> Emits `BookingPaymentEvent` (Success/Fail).
-4.  **Completion**:
-    - **Booking Service**: Updates status to `CONFIRMED` or `FAILED`.
-    - **Seat Inventory**: Updates status to `BOOKED` or `AVAILABLE` (Release).
+1.  **User** -> **Orchestrator**: `POST /booking`.
+2.  **Orchestrator**:
+    - Generates Booking ID.
+    - Emits `BookingCreatedEvent` (PENDING) -> **Booking Service** saves state.
+    - Sends `SeatReservedEvent` (Command) -> **Inventory Service**.
+3.  **Inventory Service**:
+    - Locks seats.
+    - Replies `SeatReservedEvent` (Success/Fail) -> **Orchestrator**.
+4.  **Orchestrator**:
+    - If Inventory Success: Sends `BookingPaymentEvent` (Command) -> **Payment Service**.
+    - If Inventory Fail: Mark Booking FAILED.
+5.  **Payment Service**:
+    - Deducts balance.
+    - Replies `BookingPaymentEvent` (Success/Fail) -> **Orchestrator**.
+6.  **Orchestrator**:
+    - If Payment Success: Mark Booking CONFIRMED.
+    - If Payment Fail: Send Rollback Command to Inventory & Mark Booking FAILED.
 
-### 🧩 Deep Dive: Transaction Flow & Events
+### 🧩 Deep Dive: Topics & Commands
 
-This section details the event-driven interaction for a successful booking.
-
-#### **Step 1: Booking Initiated**
-- **Service**: `Booking Service`
-- **Action**: User creates a booking.
-- **State**: `PENDING`
-- **Topic**: `booking-created-events`
-- **Event Payload** (`BookingCreatedEvent`):
-  ```json
-  {
-    "bookingId": "c4d3-...",
-    "userId": "101",
-    "showId": "101",
-    "seatIds": ["1", "2"],
-    "amount": 100
-  }
-  ```
-
-#### **Step 2: Seat Reservation**
-- **Service**: `Seat Inventory Service`
-- **Action**: Consumes `BookingCreatedEvent`. Checks availability and locks seats.
-- **State**: Seats set to `LOCKED`.
-- **Topic**: `seat-reserved-events`
-- **Event Payload** (`SeatReservedEvent`):
-  ```json
-  {
-    "bookingId": "c4d3-...",
-    "userId": "101",
-    "reserved": true,
-    "amount": 100
-  }
-  ```
-  *(If locking fails, `reserved` is `false`)*
-
-#### **Step 3: Payment Processing**
-- **Service**: `Payment Service`
-- **Action**: Consumes `SeatReservedEvent`. Deducts user balance.
-- **Topic**: `booking-payment-events`
-- **Event Payload** (`BookingPaymentEvent`):
-  ```json
-  {
-    "bookingId": "c4d3-...",
-    "paymentCompleted": true,
-    "amount": 100
-  }
-  ```
-  *(If balance insufficient, `paymentCompleted` is `false`)*
-
-#### **Step 4: Finalization**
-- **Service**: `Booking Service` & `Seat Inventory Service`
-- **Action**: Both consume `BookingPaymentEvent`.
-    - **Booking Service**: Updates status to `CONFIRMED` (if payment success) or `FAILED`.
-    - **Seat Inventory Service**: Updates seats to `BOOKED` (if payment success) or releases them to `AVAILABLE`.
+- **Commands**:
+    - `seat-reserved-commands`: Orchestrator -> Inventory
+    - `booking-payment-commands`: Orchestrator -> Payment
+- **Replies/Events**:
+    - `seat-reserved-events`: Inventory -> Orchestrator
+    - `booking-payment-events`: Payment -> Orchestrator
+    - `booking-created-events`: Orchestrator -> Booking Service (State Persistence)
 
 ## 🧪 Testing Scenarios
 
-1.  **Happy Path**: User with sufficient balance books available seats. -> **CONFIRMED**, **BOOKED**.
-2.  **Insufficient Funds**: User with low balance. -> **FAILED**, Seats Released to **AVAILABLE**.
-3.  **Seat Unavailable**: User tries to book locked/booked seats. -> **FAILED**.
+1.  **Happy Path**: User with sufficient balance books available seats. -> **CONFIRMED**.
+2.  **Insufficient Funds**: Payment fails -> Orchestrator sends Rollback to Inventory -> **FAILED**.
+3.  **Seat Unavailable**: Inventory fails -> Orchestrator marks **FAILED**.

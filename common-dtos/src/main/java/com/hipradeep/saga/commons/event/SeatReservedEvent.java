@@ -1,4 +1,7 @@
 package com.hipradeep.saga.commons.event;
 
-public record SeatReservedEvent(String bookingId, String userId, boolean reserved, long amount) {
+import java.util.List;
+
+public record SeatReservedEvent(String bookingId, String userId, String showId, List<String> seatIds, boolean reserved,
+        long amount) {
 }
