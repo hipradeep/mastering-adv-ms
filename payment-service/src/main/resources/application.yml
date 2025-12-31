@@ -1,39 +1,29 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: payment-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/payment_database
+    url: jdbc:postgresql://localhost:5432/booking_database
     username: postgres
     password: 1234
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  cloud:
-    function:
-      scan:
-        enabled: false
-    stream:
-      function:
-        definition: paymentProcessor;inventoryEventConsumer
-      bindings:
-        paymentProcessor-in-0:
-          destination: order-event
-        paymentProcessor-out-0:
-          destination: payment-event
-        inventoryEventConsumer-in-0:
-          destination: inventory-event
-      kafka:
-        binder:
-          configuration:
-            spring.json.trusted.packages: "*"
-server:
-  port: 8086
-
-logging:
-  level:
-    com.hipradeep: TRACE
-    org.springframework.cloud.stream: DEBUG
-    org.apache.kafka: INFO
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: payment-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

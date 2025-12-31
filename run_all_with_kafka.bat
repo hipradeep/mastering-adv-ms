@@ -37,9 +37,9 @@ call mvn clean install
 cd ..
 
 echo Building Services...
-start /b cmd /c "cd order-service && mvn clean install -DskipTests"
+start /b cmd /c "cd booking-service && mvn clean install -DskipTests"
 start /b cmd /c "cd payment-service && mvn clean install -DskipTests"
-start /b cmd /c "cd inventory-service && mvn clean install -DskipTests"
+start /b cmd /c "cd seat-inventory-service && mvn clean install -DskipTests"
 
 echo Waiting for builds to complete (approx 30s)...
 timeout /t 30
@@ -58,14 +58,14 @@ timeout /t 15
 echo ==================================================
 echo Step 3: Starting Microservices...
 echo ==================================================
-echo Starting Order Service...
-start "Order Service" cmd /k "java -jar order-service/target/order-service-0.0.1-SNAPSHOT.jar"
+echo Starting Booking Service...
+start "Booking Service" cmd /k "java -jar booking-service/target/booking-service-0.0.1-SNAPSHOT.jar"
 
 echo Starting Payment Service...
 start "Payment Service" cmd /k "java -jar payment-service/target/payment-service-0.0.1-SNAPSHOT.jar"
 
-echo Starting Inventory Service...
-start "Inventory Service" cmd /k "java -jar inventory-service/target/inventory-service-0.0.1-SNAPSHOT.jar"
+echo Starting Seat Inventory Service...
+start "Seat Inventory Service" cmd /k "java -jar seat-inventory-service/target/seat-inventory-service-0.0.1-SNAPSHOT.jar"
 
 
 echo ==================================================
@@ -73,6 +73,6 @@ echo All services started!
 echo NOTE: Drive W: is now mapped to your kafka folder.
 echo You can remove it later with 'subst W: /d' if needed.
 echo ==================================================
-echo Use POST http://localhost:8081/orders to test.
+echo Use POST http://localhost:8081/bookings to test.
 echo ==================================================
 pause
