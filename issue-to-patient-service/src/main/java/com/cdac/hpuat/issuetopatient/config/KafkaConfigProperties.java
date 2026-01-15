@@ -1,0 +1,11 @@
+package com.cdac.hpuat.issuetopatient.config;
+
+public class KafkaConfigProperties {
+
+    // Topics
+    public static final String TOPIC_ISSUE_COMMANDS = "issue.commands";
+    public static final String TOPIC_ORCHESTRATOR_REPLIES = "orchestrator.replies";
+
+    // Group IDs
+    public static final String GROUP_ID_ISSUE = "issue-group";
+}

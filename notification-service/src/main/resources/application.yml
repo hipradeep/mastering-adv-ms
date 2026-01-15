@@ -1,13 +1,25 @@
-server:
-  port: 8085
-
 spring:
-  application:
-    name: notification-service
-
+  datasource:
+    url: jdbc:postgresql://10.10.10.12:5444/hpuat
+    driver-class-name: org.postgresql.Driver
+    username: dwh
+    password: dwh
+  jpa:
+    hibernate:
+      ddl-auto: update
+server:
+  port: 8083
 
 logging:
+  file:
+    name: logs/hp-rc-service.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: ${LOG_FILE}.%d{yyyy-MM-dd_HH-mm}.gz
+      max-history: 30
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   level:
-    org.springframework.boot.env: DEBUG    # Shows config loading
-    org.springframework.core.env: DEBUG    # Shows property resolution
-    com.hipradeep: TRACE                   # Your package for custom logging
+    root: INFO
+    com.cdac.hp.rc: DEBUG

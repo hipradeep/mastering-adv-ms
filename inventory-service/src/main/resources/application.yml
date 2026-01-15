@@ -1,13 +1,30 @@
-server:
-  port: 8084
-
 spring:
-  application:
-    name: inventory-service
-
+  datasource:
+    url: jdbc:postgresql://10.10.10.12:5444/hpuat?currentSchema=dwh
+    driver-class-name: org.postgresql.Driver
+    username: dwh
+    password: dwh
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        #default_schema: dwh
+server:
+  port: 8082
 
 logging:
+  file:
+    name: logs/hp-rc-service.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: ${LOG_FILE}.%d{yyyy-MM-dd_HH-mm}.gz
+      max-history: 30
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   level:
-    org.springframework.boot.env: DEBUG    # Shows config loading
-    org.springframework.core.env: DEBUG    # Shows property resolution
-    com.hipradeep: TRACE                   # Your package for custom logging
+    root: INFO
+    com.cdac.hp.rc: DEBUG
