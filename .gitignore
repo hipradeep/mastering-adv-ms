@@ -1,12 +1,38 @@
-/.idea/
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
 
+# Node.js / React
+node_modules/
+dist/
+build/
+coverage/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-### Microservice Modules Targets ###
-gateway-service/target/
-eureka-server/target/
-config-server/target/
-auth-service/target/
-user-service/target/
-order-service/target/
-inventory-service/target/
-notification-service/target/
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Project Specific
+kafka/data/
+kafka/logs/

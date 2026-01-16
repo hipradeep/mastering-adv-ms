@@ -16,6 +16,10 @@ public class KafkaProducerService {
 
     public void sendMessage(String topic, String key, Object message) {
         log.info("Sending message to topic: {}, key: {}, payload: {}", topic, key, message);
-        kafkaTemplate.send(topic, key, message);
+        try {
+            kafkaTemplate.send(topic, key, message).get();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send message to Kafka", e);
+        }
     }
 }

@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.cdac.hpuat.orchestrator.config.KafkaConfigProperties.TOPIC_INVENTORY_COMMANDS;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class OrchestratorService {
 
@@ -24,6 +26,7 @@ public class OrchestratorService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Transactional
     public String initiateIssueTransaction(IssueRequestDto requestDto) {
         // 1. Generate unique Transaction ID
         String transactionId = UUID.randomUUID().toString();

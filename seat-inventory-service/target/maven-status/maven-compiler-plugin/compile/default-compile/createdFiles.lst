@@ -1,7 +1,0 @@
-com\hipradeep\inventory\controller\SeatInventoryController.class
-com\hipradeep\inventory\consumer\SeatInventoryEventListener.class
-com\hipradeep\inventory\entity\SeatInventory.class
-com\hipradeep\inventory\SeatInventoryApplication.class
-com\hipradeep\inventory\repository\SeatInventoryRepository.class
-com\hipradeep\inventory\service\SeatInventoryService.class
-com\hipradeep\inventory\producer\SeatInventoryProducer.class
