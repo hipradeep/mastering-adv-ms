@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.cdac.hpuat.orchestrator.config.KafkaConfigProperties.TOPIC_INVENTORY_COMMANDS;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrchestratorService {
@@ -26,7 +26,7 @@ public class OrchestratorService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String initiateIssueTransaction(IssueRequestDto requestDto) {
         // 1. Generate unique Transaction ID
         String transactionId = UUID.randomUUID().toString();

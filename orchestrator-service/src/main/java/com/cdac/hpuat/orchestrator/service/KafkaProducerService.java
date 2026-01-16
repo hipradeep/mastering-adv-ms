@@ -19,7 +19,7 @@ public class KafkaProducerService {
         try {
             kafkaTemplate.send(topic, key, message).get();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send message to Kafka", e);
+            throw new RuntimeException("Service Is not available;", e);
         }
     }
 }

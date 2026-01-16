@@ -16,7 +16,7 @@ server:
 
 logging:
   file:
-    name: logs/hp-rc-service.log
+    name: logs/issue-to-patient-service.log
   logback:
     rollingpolicy:
       file-name-pattern: ${LOG_FILE}.%d{yyyy-MM-dd_HH-mm}.gz
