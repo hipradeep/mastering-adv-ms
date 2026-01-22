@@ -5,5 +5,6 @@ public enum TransactionStatus {
     STOCK_CONFIRMED,
     STOCK_FAILED,
     COMPLETED,
-    ISSUE_CREATION_FAILED
+    ISSUE_CREATION_FAILED,
+    TIMED_OUT
 }

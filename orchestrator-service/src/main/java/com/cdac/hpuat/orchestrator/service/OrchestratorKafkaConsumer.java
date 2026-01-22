@@ -1,6 +1,7 @@
 package com.cdac.hpuat.orchestrator.service;
 
 import com.cdac.hpuat.orchestrator.dto.command.ConfirmStockCommand;
+import com.cdac.hpuat.orchestrator.dto.command.RollbackStockCommand;
 import com.cdac.hpuat.orchestrator.dto.event.IssueCreatedEvent;
 import com.cdac.hpuat.orchestrator.repository.SagaTransactionRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -110,10 +111,16 @@ public class OrchestratorKafkaConsumer {
         } else {
             // Rollback Stock
             log.warn("Issue Creation Failed. Rolling back Stock for Transaction: {}", event.getTransactionId());
-            ConfirmStockCommand command = new ConfirmStockCommand(
+
+            IssueRequestDto originalRequest = objectMapper.readValue(transaction.getHststrRequestPayload(),
+                    IssueRequestDto.class);
+
+            RollbackStockCommand command = new RollbackStockCommand(
                     event.getTransactionId(),
-                    false // Rollback
-            );
+                    originalRequest.getGnumHospitalCode(),
+                    originalRequest.getHstnumStoreId(),
+                    originalRequest.getItems());
+
             producerService.sendMessage(
                     TOPIC_INVENTORY_COMMANDS,
                     event.getTransactionId(), command);

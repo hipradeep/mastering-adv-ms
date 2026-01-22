@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.cdac.hpuat.inventory.dto.command.ReserveStockCommand;
 import com.cdac.hpuat.inventory.dto.command.ConfirmStockCommand;
+import com.cdac.hpuat.inventory.dto.command.RollbackStockCommand;
 import com.cdac.hpuat.inventory.dto.event.StockReservedEvent;
 import com.cdac.hpuat.inventory.dto.IssueItemDto;
 
@@ -35,6 +36,8 @@ public class InventoryKafkaConsumer {
                 handleReserve((ReserveStockCommand) message);
             } else if (message instanceof ConfirmStockCommand) {
                 handleConfirm((ConfirmStockCommand) message);
+            } else if (message instanceof RollbackStockCommand) {
+                handleRollback((RollbackStockCommand) message);
             } else {
                 log.warn("Unknown message type: {}", message.getClass().getName());
             }
@@ -43,48 +46,57 @@ public class InventoryKafkaConsumer {
         }
     }
 
-    private void handleReserve(ReserveStockCommand command) throws Exception {
+    private void handleReserve(ReserveStockCommand command) {
         log.info("Processing ReserveStockCommand: {}", command.getTransactionId());
 
-        boolean allReserved = true;
+        try {
+            inventoryService.reserveStock(
+                    command.getTransactionId(),
+                    command.getGnumHospitalCode(),
+                    command.getHstnumStoreId(),
+                    command.getItems());
+
+            // Send StockReservedEvent (Success)
+            StockReservedEvent event = new StockReservedEvent(
+                    command.getTransactionId(),
+                    true,
+                    "Stock Reserved Successfully");
+
+            kafkaTemplate.send(TOPIC_ORCHESTRATOR_REPLIES, command.getTransactionId(), event);
+
+        } catch (Exception e) {
+            log.error("Stock Reservation Failed", e);
+            // Send Failure Event
+            StockReservedEvent event = new StockReservedEvent(
+                    command.getTransactionId(),
+                    false,
+                    "Stock Reservation Failed: " + e.getMessage());
+            kafkaTemplate.send(TOPIC_ORCHESTRATOR_REPLIES, command.getTransactionId(), event);
+        }
+    }
+
+    private void handleConfirm(ConfirmStockCommand command) {
+        log.info("Handling ConfirmStockCommand (Commit) for Transaction: {}", command.getTransactionId());
+        // Logic to finalize stock if you had a temporary hold state.
+        // Currently we deduct immediately, so this might just be an acknowledgment or
+        // no-op.
+    }
+
+    private void handleRollback(RollbackStockCommand command) {
+        log.info("Handling RollbackStockCommand for Transaction: {}", command.getTransactionId());
         try {
             for (IssueItemDto item : command.getItems()) {
-                inventoryService.updateStock(
+                inventoryService.releaseStock(
+                        command.getTransactionId(),
                         command.getGnumHospitalCode(),
                         command.getHstnumStoreId(),
                         item.getHstnumItembrandId(),
                         item.getHststrBatchSlNo(),
                         item.getHstnumIssueQty().intValue());
             }
+            log.info("Rollback successful for Transaction: {}", command.getTransactionId());
         } catch (Exception e) {
-            log.error("Failed to reserve stock", e);
-            allReserved = false;
-        }
-
-        StockReservedEvent event = new StockReservedEvent(
-                command.getTransactionId(),
-                allReserved,
-                allReserved ? "Stock Reserved Successfully" : "Stock Reservation Failed");
-        kafkaTemplate.send(TOPIC_ORCHESTRATOR_REPLIES,     command.getTransactionId(), event);
-    }
-
-    private void handleConfirm(ConfirmStockCommand command) throws Exception {
-        log.info("Processing ConfirmStockCommand: {}", command.getTransactionId());
-
-        if (command.isCommit()) {
-            log.info("Transaction {} Committed.", command.getTransactionId());
-        } else {
-            log.warn("Transaction {} Rollback Requested.", command.getTransactionId());
-            // Rollback logic: Add stock back?
-            // We need to know WHAT to rollback.
-            // CAUTION: ConfirmStockCommand doesn't have Items list.
-            // If we are stateless here, we can't rollback easily without the items.
-            // Fix: Orchestrator should send Items in ConfirmStockCommand OR Inventory
-            // should have stored state.
-            // Given the complexity, for now we will just Log Rollback Request.
-            // To fix: Add Items to ConfirmStockCommand in Orchestrator.
-            // User requested basic flow. Leaving as Log for now to avoid scope creep, but
-            // helpful to note.
+            log.error("Failed to rollback stock for Transaction: {}", command.getTransactionId(), e);
         }
     }
 }

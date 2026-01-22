@@ -31,52 +31,61 @@ public class IssueKafkaConsumer {
     public void consume(CreateIssueCommand command) {
         log.info("Received Message in group issue-group: {}", command);
         try {
+
+
             log.info("Processing CreateIssueCommand for Transaction: {}", command.getTransactionId());
 
-            try {
-                // Map Command to Request DTO
-                IssueRequestDto requestDto = new IssueRequestDto();
-                requestDto.setGnumHospitalCode(command.getGnumHospitalCode());
-                requestDto.setHstnumStoreId(command.getHstnumStoreId());
-                requestDto.setHrgnumPuk(command.getHrgnumPuk());
-                requestDto.setHststrPatientName(command.getHststrPatientName());
-                requestDto.setGstrRemarks(command.getGstrRemarks());
+            // Map Command to Request DTO
+            IssueRequestDto requestDto = new IssueRequestDto();
+            requestDto.setGnumHospitalCode(command.getGnumHospitalCode());
+            requestDto.setHstnumStoreId(command.getHstnumStoreId());
+            requestDto.setHrgnumPuk(command.getHrgnumPuk());
+            requestDto.setHststrPatientName(command.getHststrPatientName());
+            requestDto.setGstrRemarks(command.getGstrRemarks());
 
-                List<IssueItemDto> items = new ArrayList<>();
-                for (IssueItemDto cmdItem : command.getItems()) {
-                    IssueItemDto item = new IssueItemDto();
-                    item.setHstnumItembrandId(cmdItem.getHstnumItembrandId());
-                    item.setHststrBatchSlNo(cmdItem.getHststrBatchSlNo());
-                    item.setHstnumIssueQty(cmdItem.getHstnumIssueQty());
-                    item.setHstnumStoreId(cmdItem.getHstnumStoreId());
-                    items.add(item);
+            List<IssueItemDto> items = new ArrayList<>();
+            for (IssueItemDto cmdItem : command.getItems()) {
+                IssueItemDto item = new IssueItemDto();
+                item.setHstnumItembrandId(cmdItem.getHstnumItembrandId());
+                item.setHststrBatchSlNo(cmdItem.getHststrBatchSlNo());
+                item.setHstnumIssueQty(cmdItem.getHstnumIssueQty());
+                item.setHstnumStoreId(cmdItem.getHstnumStoreId());
+                items.add(item);
+
+                if(cmdItem.getHstnumIssueQty()%2==0){
+                    int i = 1 / 0;
                 }
-                requestDto.setItems(items);
-
-                // Call Service
-                issueService.createIssue(requestDto);
-
-                // Send Success Event
-                IssueCreatedEvent event = new IssueCreatedEvent(
-                        command.getTransactionId(),
-                        true,
-                        "Issue Created Successfully");
-                kafkaTemplate.send(TOPIC_ORCHESTRATOR_REPLIES,  command.getTransactionId(), event);
-
-            } catch (Exception e) {
-                log.error("Failed to create issue", e);
-                // Send Failure Event
-                IssueCreatedEvent event = new IssueCreatedEvent(
-                        command.getTransactionId(),
-                        false,
-                        "Failed to create issue: " + e.getMessage());
-                kafkaTemplate.send(
-                        TOPIC_ORCHESTRATOR_REPLIES,
-                        command.getTransactionId(), event);
             }
+            requestDto.setItems(items);
+
+            // Call Service
+            issueService.createIssue(requestDto);
+
+            // Send Success Event
+            IssueCreatedEvent event = new IssueCreatedEvent(
+                    command.getTransactionId(),
+                    true,
+                    "Issue Created Successfully");
+            kafkaTemplate.send(TOPIC_ORCHESTRATOR_REPLIES, command.getTransactionId(), event);
 
         } catch (Exception e) {
-            log.error("Error processing message", e);
+            log.error("Error processing message or creating issue", e);
+            // Send Failure Event if we have a transaction ID
+            if (command != null && command.getTransactionId() != null) {
+                try {
+                    IssueCreatedEvent event = new IssueCreatedEvent(
+                            command.getTransactionId(),
+                            false,
+                            "Failed to create issue: " + e.getMessage());
+                    kafkaTemplate.send(
+                            TOPIC_ORCHESTRATOR_REPLIES,
+                            command.getTransactionId(), event);
+                } catch (Exception kafkaError) {
+                    log.error("Critical: Failed to send failure event to Orchestrator", kafkaError);
+                }
+            } else {
+                log.error("Critical: Cannot report failure, Transaction ID missing");
+            }
         }
     }
 }

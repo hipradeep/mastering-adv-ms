@@ -38,4 +38,10 @@ public interface DrugCurrstockDtlRepository extends JpaRepository<HsttDrugCurrst
         int deductStock(@Param("hospitalCode") Integer hospitalCode, @Param("storeId") Integer storeId,
                         @Param("itemBrandId") Integer itemBrandId, @Param("batchNo") String batchNo,
                         @Param("deductQty") Integer deductQty);
+
+        @Modifying
+        @Query(value = "UPDATE dwh.hstt_drug_currstock_dtl SET hstnum_inhand_qty = hstnum_inhand_qty + :addQty WHERE hstnum_store_id = :storeId AND hstnum_itembrand_id = :itemBrandId AND hststr_batch_no = :batchNo AND gnum_hospital_code = :hospitalCode", nativeQuery = true)
+        int releaseReservedStock(@Param("hospitalCode") Integer hospitalCode, @Param("storeId") Integer storeId,
+                        @Param("itemBrandId") Integer itemBrandId, @Param("batchNo") String batchNo,
+                        @Param("addQty") Integer addQty);
 }

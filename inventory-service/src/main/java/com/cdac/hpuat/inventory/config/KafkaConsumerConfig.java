@@ -29,7 +29,9 @@ public class KafkaConsumerConfig {
         props.put(JsonDeserializer.TYPE_MAPPINGS,
                 "com.cdac.hpuat.orchestrator.dto.command.ReserveStockCommand:com.cdac.hpuat.inventory.dto.command.ReserveStockCommand, "
                         +
-                        "com.cdac.hpuat.orchestrator.dto.command.ConfirmStockCommand:com.cdac.hpuat.inventory.dto.command.ConfirmStockCommand");
+                        "com.cdac.hpuat.orchestrator.dto.command.ConfirmStockCommand:com.cdac.hpuat.inventory.dto.command.ConfirmStockCommand, "
+                        +
+                        "com.cdac.hpuat.orchestrator.dto.command.RollbackStockCommand:com.cdac.hpuat.inventory.dto.command.RollbackStockCommand");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 

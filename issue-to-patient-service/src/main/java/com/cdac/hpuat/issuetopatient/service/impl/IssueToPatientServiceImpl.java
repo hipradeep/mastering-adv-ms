@@ -35,6 +35,19 @@ public class IssueToPatientServiceImpl implements IssueToPatientService {
     private PatempIssueItemDtlRepository issueItemDtlRepository;
 
     @Override
+    public IssueResponseDto getIssueDetails(Integer hospitalCode, Integer storeId, Integer issueNo) {
+
+        HsttPatempIssueDtlPK pk = new HsttPatempIssueDtlPK(storeId, issueNo, hospitalCode);
+        HsttPatempIssueDtl issueDtl = issueDtlRepository.findById(pk)
+                .orElseThrow(() -> new ResourceNotFoundException("Issue not found with Issue No: " + issueNo));
+
+        List<HsttPatempIssueItemDtl> items = issueItemDtlRepository.findItemsByIssueDetails(issueNo, storeId,
+                hospitalCode);
+
+        return mapToResponseDto(issueDtl, items);
+    }
+
+    @Override
     @Transactional
     public String createIssue(IssueRequestDto requestDto) {
 
@@ -122,19 +135,6 @@ public class IssueToPatientServiceImpl implements IssueToPatientService {
         }
 
         return "Issue Generated Successfully. Issue No: " + nextIssueNo;
-    }
-
-    @Override
-    public IssueResponseDto getIssueDetails(Integer hospitalCode, Integer storeId, Integer issueNo) {
-
-        HsttPatempIssueDtlPK pk = new HsttPatempIssueDtlPK(storeId, issueNo, hospitalCode);
-        HsttPatempIssueDtl issueDtl = issueDtlRepository.findById(pk)
-                .orElseThrow(() -> new ResourceNotFoundException("Issue not found with Issue No: " + issueNo));
-
-        List<HsttPatempIssueItemDtl> items = issueItemDtlRepository.findItemsByIssueDetails(issueNo, storeId,
-                hospitalCode);
-
-        return mapToResponseDto(issueDtl, items);
     }
 
     @Override
