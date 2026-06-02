@@ -29,24 +29,10 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <id>hipradeep</id>
-            <name>Pradeep Maurya</name>
-            <email>pradeepmaurya.cse@gmail.com</email>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:git://github.com/hipradeep/mastring-adv-ms.git</connection>
-        <developerConnection>scm:git:ssh://github.com:hipradeep/mastring-adv-ms.git</developerConnection>
-        <tag>HEAD</tag>
-        <url>https://github.com/hipradeep/mastring-adv-ms</url>
-    </scm>
 
     <!-- Java version -->
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <spring-boot.version>3.4.5</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
