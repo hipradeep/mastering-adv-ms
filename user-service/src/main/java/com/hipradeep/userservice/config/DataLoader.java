@@ -1,18 +1,25 @@
 package com.hipradeep.userservice.config;
 
-import com.hipradeep.userservice.dto.UserResponse;
-import com.hipradeep.userservice.util.JsonUtils;
+import com.hipradeep.userservice.model.User;
+import com.hipradeep.userservice.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataLoader {
 
+    private final UserRepository userRepository;
+
+    public DataLoader(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @PostConstruct
     public void init() {
-        // Demonstrate using common lib JsonUtils
-        UserResponse sampleUser = new UserResponse(100L, "admin", "admin@example.com", "System", "Admin");
-        String json = JsonUtils.toJson(sampleUser);
-        System.out.println("Sample User JSON: " + json);
+        // Only initialize username and password in database
+        userRepository.save(new User(null, "admin", "admin123"));
+        userRepository.save(new User(null, "user", "password123"));
+        
+        System.out.println("=== Database User Initialization Completed successfully ===");
     }
 }

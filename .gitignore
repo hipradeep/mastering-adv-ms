@@ -1,13 +1,17 @@
-/.idea/
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
 
+# Maven build targets
+target/
 
-### Microservice Modules Targets ###
-gateway-service/target/
-eureka-server/target/
-config-server/target/
-auth-service/target/
-user-service/target/
-order-service/target/
-inventory-service/target/
-notification-service/target/
+# Log files
 /logs/
+*.log
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
