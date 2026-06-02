@@ -1,0 +1,23 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-server
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: false
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}:${server.port}
+
+
+logging:
+  level:
+    org.springframework.boot.env: DEBUG    # Shows config loading
+    org.springframework.core.env: DEBUG    # Shows property resolution
+    com.hipradeep: TRACE                   # Your package for custom logging

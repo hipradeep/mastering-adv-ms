@@ -4,8 +4,16 @@ server:
 spring:
   application:
     name: api-gateway
-  config:
-    import: "optional:configserver:http://localhost:8888/"
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: false
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}:${server.port}
 
   cloud:
     gateway:
@@ -14,13 +22,26 @@ spring:
           enabled: true         # Enable route generation via serviceId
           lower-case-service-id: true
       routes:
+        - id: auth-server
+          uri: lb://auth-server
+          predicates:
+            - Path=/api/auth/**
         - id: user-service
           uri: lb://user-service   # lb:// = load balanced via Eureka
           predicates:
             - Path=/api/users/**        # Route requests starting with /user
-          filters:
-          #- StripPrefix=1        # Remove /api before forwarding
-          #- StripPrefix=2        # Remove /api/users before forwarding
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
 
 
 logging:
