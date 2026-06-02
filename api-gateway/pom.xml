@@ -15,9 +15,9 @@
 
 	<!-- Project coordinates -->
 	<groupId>com.hipradeep</groupId>
-	<artifactId>gateway-service</artifactId>
+	<artifactId>api-gateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>gateway-service</name>
+	<name>api-gateway</name>
 	<description>Api Gateway for MAMS</description>
 	<url>https://github.com/hipradeep/mastring-adv-ms</url>
 

@@ -7,7 +7,7 @@ A monorepo containing multiple independent Spring Boot microservices demonstrati
 - `auth-server` – Handles authentication, JWT token generation, and validation.
 - `config-server` – Central configuration server for all services.
 - `eureka-server` – Service registry for service discovery.
-- `gateway-service` – API Gateway to route requests to microservices.
+- `api-gateway` – API Gateway to route requests to microservices.
 - `inventory-service` – Manages product inventory and stock levels.
 - `notification-service` – Sends notifications via email/SMS or other channels.
 - `order-service` – Handles order creation, tracking, and management.
@@ -37,9 +37,9 @@ cd config-server && mvn clean install && mvn spring-boot:run
 cd eureka-server && mvn clean install && mvn spring-boot:run
 ```
 
-### gateway-service
+### api-gateway
 ```bash
-cd gateway-service && mvn clean install && mvn spring-boot:run
+cd api-gateway && mvn clean install && mvn spring-boot:run
 ```
 
 ### inventory-service
@@ -74,9 +74,9 @@ cd config-server && mvn clean install -DskipTests  && mvn spring-boot:run
 cd eureka-server && mvn clean install -DskipTests  && mvn spring-boot:run
 ```
 
-### gateway-service
+### api-gateway
 ```bash
-cd gateway-service && mvn clean install -DskipTests  && mvn spring-boot:run
+cd api-gateway && mvn clean install -DskipTests  && mvn spring-boot:run
 ```
 
 ### auth-server
