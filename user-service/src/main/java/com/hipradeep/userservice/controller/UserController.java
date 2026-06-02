@@ -1,63 +1,64 @@
 package com.hipradeep.userservice.controller;
 
-
 import com.hipradeep.userservice.dto.ApiResponse;
-import com.hipradeep.userservice.util.JsonUtils;
+import com.hipradeep.userservice.dto.UserRequest;
 import com.hipradeep.userservice.dto.UserResponse;
+import com.hipradeep.userservice.model.User;
+import com.hipradeep.userservice.repository.UserRepository;
+import jakarta.validation.Valid;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getUserById(@PathVariable Long id) {
-        // Simulate getting user from database
-        UserResponse user = new UserResponse(id, "johndoe", "john@example.com", "John", "Doe");
-
-        // Using common lib ApiResponse
-        return ApiResponse.success(user);
+        return userRepository.findById(id)
+                .map(user -> ApiResponse.success(mapToResponse(user)))
+                .orElseGet(() -> ApiResponse.error("User not found with ID: " + id, "NOT_FOUND"));
     }
 
     @GetMapping
     public ApiResponse<List<UserResponse>> getAllUsers() {
-        // Simulate getting all users
-        List<UserResponse> users = List.of(
-                new UserResponse(1L, "johndoe", "john@example.com", "John", "Doe"),
-                new UserResponse(2L, "janedoe", "jane@example.com", "Jane", "Doe")
-        );
-
+        List<UserResponse> users = userRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
         return ApiResponse.success(users);
     }
 
     @PostMapping
-    public ApiResponse<UserResponse> createUser(@RequestBody UserResponse userRequest) {
-        // Simulate user creation
-        UserResponse createdUser = new UserResponse(
-                3L,
-                userRequest.getUsername(),
-                userRequest.getEmail(),
-                userRequest.getFirstName(),
-                userRequest.getLastName()
-        );
+    public ApiResponse<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+        User user = new User();
+        user.setUsername(userRequest.getUsername());
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword())); // Encrypt password using BCrypt
+        user.setEmail(userRequest.getEmail());
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
 
-        return ApiResponse.success(createdUser);
+        User savedUser = userRepository.save(user);
+        return ApiResponse.success(mapToResponse(savedUser));
     }
 
-    @GetMapping("/json-test")
-    public String testJsonUtils() {
-        // Test common lib JsonUtils
-        UserResponse user = new UserResponse(1L, "testuser", "test@example.com", "Test", "User");
-
-        String json = JsonUtils.toJson(user);
-        System.out.println("JSON Output: " + json);
-
-        // Convert back to object
-        UserResponse parsedUser = JsonUtils.fromJson(json, UserResponse.class);
-        System.out.println("Parsed User: " + parsedUser.getUsername());
-
-        return json;
+    private UserResponse mapToResponse(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName()
+        );
     }
 }

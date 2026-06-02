@@ -1,1 +1,5 @@
+com\hipradeep\gatewayservice\util\JwtUtil.class
+com\hipradeep\gatewayservice\filter\RouteValidator.class
 com\hipradeep\gatewayservice\ApiGatewayServiceApplication.class
+com\hipradeep\gatewayservice\filter\AuthenticationFilter$Config.class
+com\hipradeep\gatewayservice\filter\AuthenticationFilter.class

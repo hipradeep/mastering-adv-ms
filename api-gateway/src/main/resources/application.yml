@@ -4,19 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: false
-    hostname: ${spring.application.name}
-    instance-id: ${spring.application.name}:${server.port}
-
   cloud:
     gateway:
+      default-filters:
+        - AddRequestHeader=X-Gateway-Secret, my-secure-shared-gateway-secret-123
       discovery:
         locator:
           enabled: true         # Enable route generation via serviceId
@@ -25,24 +16,42 @@ eureka:
         - id: auth-server
           uri: lb://auth-server
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth, /api/auth/**
         - id: user-service
           uri: lb://user-service   # lb:// = load balanced via Eureka
           predicates:
-            - Path=/api/users/**        # Route requests starting with /user
+            - Path=/api/users, /api/users/**        # Route requests starting with /user
+          filters:
+            - AuthenticationFilter
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/orders/**
+            - Path=/api/orders, /api/orders/**
+          filters:
+            - AuthenticationFilter
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
-            - Path=/api/inventory/**
+            - Path=/api/inventory, /api/inventory/**
+          filters:
+            - AuthenticationFilter
         - id: notification-service
           uri: lb://notification-service
           predicates:
-            - Path=/api/notifications/**
+            - Path=/api/notifications, /api/notifications/**
+          filters:
+            - AuthenticationFilter
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}:${server.port}
 
 logging:
   level:

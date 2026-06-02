@@ -1,4 +1,4 @@
-package com.hipradeep.userservice.model;
+package com.hipradeep.authserver.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +23,4 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private String firstName;
-    private String lastName;
 }

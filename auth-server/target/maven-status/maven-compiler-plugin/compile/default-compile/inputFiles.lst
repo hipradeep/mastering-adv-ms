@@ -1,1 +1,9 @@
 C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\AuthServerApplication.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\config\SecurityConfig.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\controller\AuthController.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\dto\AuthRequest.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\dto\AuthResponse.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\model\User.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\repository\UserRepository.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\service\CustomUserDetailsService.java
+C:\Users\hipradeep\Documents\mastering-adv-ms\auth-server\src\main\java\com\hipradeep\authserver\service\JwtService.java
