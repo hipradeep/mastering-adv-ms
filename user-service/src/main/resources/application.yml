@@ -5,9 +5,9 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/mams
-    username: postgres
-    password: "1234"
+    url: jdbc:postgresql://<rds-endpoint>.rds.amazonaws.com:5432/mams
+    username: <rds-username>
+    password: <rds-password>
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
