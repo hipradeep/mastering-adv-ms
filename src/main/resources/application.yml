@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: s3-trigger-service
+  cloud:
+    function:
+      definition: s3EventConsumer
+
+logging:
+  level:
+    root: INFO
+    com.example.s3trigger: DEBUG
+    org.springframework.cloud.function: INFO
+
+aws:
+  s3:
+    processed-bucket: ${PROCESSED_BUCKET_NAME:sample-processed-bucket}

@@ -1,9 +1,0 @@
-com\hipradeep\gatewayservice\util\JwtUtil.class
-com\hipradeep\gatewayservice\filter\RouteValidator.class
-com\hipradeep\gatewayservice\filter\LoggingFilter.class
-com\hipradeep\gatewayservice\ApiGatewayServiceApplication.class
-com\hipradeep\gatewayservice\filter\AuthenticationFilter$Config.class
-com\hipradeep\gatewayservice\filter\LoggingFilter$1.class
-com\hipradeep\gatewayservice\filter\AuthenticationFilter.class
-com\hipradeep\gatewayservice\model\GatewayLog.class
-com\hipradeep\gatewayservice\repository\GatewayLogRepository.class

@@ -1,7 +1,0 @@
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\ApiGatewayServiceApplication.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\filter\AuthenticationFilter.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\filter\LoggingFilter.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\filter\RouteValidator.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\model\GatewayLog.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\repository\GatewayLogRepository.java
-C:\Users\hipradeep\Documents\mastering-adv-ms\api-gateway\src\main\java\com\hipradeep\gatewayservice\util\JwtUtil.java

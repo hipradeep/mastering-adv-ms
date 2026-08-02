@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Spring Boot & Spring Cloud Function AWS Lambda for Automated S3 Triggers
+  Architecture: S3 Bucket (Uploads) -> S3 Event -> Spring Boot Lambda -> Processed S3 Bucket
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+    Runtime: java17
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        MAIN_CLASS: com.example.s3trigger.S3TriggerApplication
+        SPRING_CLOUD_FUNCTION_DEFINITION: s3EventConsumer
+        PROCESSED_BUCKET_NAME: !Ref ProcessedBucket
+        JAVA_TOOL_OPTIONS: "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+
+Resources:
+  # -------------------------------------------------------------------
+  # 1. Source S3 Bucket (Uploads)
+  # -------------------------------------------------------------------
+  SourceUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # -------------------------------------------------------------------
+  # 2. Destination S3 Bucket (Processed Outputs)
+  # -------------------------------------------------------------------
+  ProcessedBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-processed-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # -------------------------------------------------------------------
+  # 3. Spring Boot AWS Lambda Function triggered by S3 Object Creation
+  # -------------------------------------------------------------------
+  SpringS3TriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+      Description: Spring Boot Lambda function triggered by S3 Object Created events
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
+        - S3WritePolicy:
+            BucketName: !Sub "${AWS::StackName}-processed-${AWS::AccountId}"
+      Events:
+        S3UploadEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref SourceUploadBucket
+            Events: s3:ObjectCreated:*
+
+  # -------------------------------------------------------------------
+  # 4. CloudWatch Log Group for Lambda
+  # -------------------------------------------------------------------
+  SpringS3TriggerFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${SpringS3TriggerFunction}"
+      RetentionInDays: 14
+
+Outputs:
+  SourceUploadBucketName:
+    Description: "Source S3 Bucket for uploading files"
+    Value: !Ref SourceUploadBucket
+  ProcessedBucketName:
+    Description: "Destination S3 Bucket for storing processed metadata"
+    Value: !Ref ProcessedBucket
+  LambdaFunctionArn:
+    Description: "Spring Cloud Function AWS Lambda ARN"
+    Value: !GetAtt SpringS3TriggerFunction.Arn
